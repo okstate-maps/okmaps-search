@@ -4,7 +4,7 @@ var MAP_PIXEL_AREA;
 var CARTO_USER = "krdyke";
 var TABLE_NAME = "bbox_test_set3";
 var PER_PAGE = 100;
-var QUERY_URL = "http://{username}.carto.com/api/v2/sql?q=".replace("{username}", CARTO_USER);
+var QUERY_URL = "https://{username}.carto.com/api/v2/sql?q=".replace("{username}", CARTO_USER);
 //var carto_fields = ["the_geom", "title", "title_article_split",
 //    "subject_headings", "url", "year_start", "year_end", "city","county"];
 var TABLE_FIELDS = ["the_geom", "title", "cartodb_id", "original_date","contentdm_number"];
