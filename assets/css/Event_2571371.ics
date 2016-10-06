@@ -1,0 +1,26 @@
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Springshare//LibCal//EN
+CALSCALE:GREGORIAN
+METHOD:PUBLISH
+X-WR-TIMEZONE:America/Chicago
+BEGIN:VEVENT
+DTSTART:20161020T203000Z
+DTEND:20161020T220000Z
+DTSTAMP:20161020T000000Z
+SUMMARY:The Great War & Its Legacy: 1914-1918 - History of the Great War and Africa
+DESCRIPTION:\nContact: Anthony jones anthony.wayne.jones@okstate.edu
+LOCATION:Peggy V. Helmerich Browsing Room\, Edmon Low Library
+CATEGORIES:Instruction, Public Program
+CONTACT;CN=Anthony jones:MAILTO:anthony.wayne.jones@okstate.edu
+STATUS:CONFIRMED
+UID:LibCal-2571371
+URL:http://okstate.libcal.com/event/2571371
+X-MICROSOFT-CDO-BUSYSTATUS:BUSY
+BEGIN:VALARM
+TRIGGER:-PT15M
+ACTION:DISPLAY
+DESCRIPTION:Reminder
+END:VALARM
+END:VEVENT
+END:VCALENDAR
