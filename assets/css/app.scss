@@ -1,34 +1,42 @@
+$sidebar-width: 350px;
+$orange: #FF7300;
+$light-orange: #FF9900;
+$silver: #BEBEBE;
+$black: #000;
+
+
 html, body, #container {
   height: 100%;
   width: 100%;
-  overflow: hidden; }
-
+  overflow: hidden;
+}
 body {
-  padding-top: 50px; }
-
+  padding-top: 50px;
+}
 input[type="radio"], input[type="checkbox"] {
-  margin: 0; }
-
+  margin: 0;
+}
 #sidebar {
   display: block;
-  width: 350px;
+  width: $sidebar-width;
   height: 100%;
   max-width: 100%;
-  float: left; }
-
+  float: left;
+}
 #map {
   width: auto;
   height: 100%;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.5); }
+  box-shadow: 0 0 10px rgba(0,0,0,0.5);
+}
 
-.animated-icon {
+.animated-icon{
   width: 20px;
   height: 20px;
-  background-color: rgba(255, 115, 0, 0.5);
+  background-color: rgba(255,115,0,0.5);
   border-radius: 50%;
   box-shadow: 0px 0px 4px white;
-  transition: all 1s; }
-
+  transition: all 1s;
+}
 #loading {
   position: absolute;
   width: 220px;
@@ -36,100 +44,103 @@ input[type="radio"], input[type="checkbox"] {
   top: 50%;
   left: 50%;
   margin: -10px 0 0 -110px;
-  z-index: 20001; }
-
+  z-index: 20001;
+}
 #features {
   margin: 0px;
   border: none;
   border-radius: 0px;
   -webkit-box-shadow: none;
-  box-shadow: none; }
-
+    box-shadow: none;
+}
 #sidebar-hide-btn {
-  margin-top: -2px; }
-
+  margin-top: -2px;
+}
 #aboutTabsContent {
-  padding-top: 10px; }
-
+  padding-top: 10px;
+}
 .progress-bar-full {
-  width: 100%; }
-
+  width: 100%;
+}
 .orange {
-  color: #FF7300; }
-
+  color: $orange;
+}
 .white {
-  color: #FFFFFF; }
-
-.panel-heading {
-  width: 350px; }
-
-.panel-body {
-  width: 350px; }
-
+  color: #FFFFFF;
+}
+.panel-heading{
+   width: $sidebar-width;
+}
+.panel-body{
+  width: $sidebar-width;
+}
 .feature-row {
   cursor: pointer;
-  width: 350px; }
-
+  width: $sidebar-width;
+}
 .autosearch {
-  padding-top: 8px; }
-
+  padding-top: 8px;
+}
 .sidebar-wrapper {
   width: 100%;
   height: 100%;
-  position: relative; }
-
+  position: relative;
+}
 .sidebar-table {
   position: absolute;
   width: 100%;
   top: 125px;
   bottom: 45px;
-  overflow: auto; }
-
+  overflow: auto;
+}
 .sidebar-footer {
-  height: 45px;
-  width: 100%;
-  position: absolute;
-  bottom: 0px;
-  background-color: #F5F5F5;
-  border-top: 1px solid #ddd; }
-
-.table-hover > tbody > tr:hover {
-  background-color: #FF9900; }
-
+  height:45px;
+  width:100%;
+  position:absolute;
+  bottom:0px;
+  background-color:#F5F5F5;
+  border-top:1px solid #ddd;
+}
+.table-hover>tbody>tr:hover {
+	background-color: $light-orange;
+}
 .leaflet-control-layers {
-  overflow: auto; }
-
+  overflow: auto;
+}
 .leaflet-control-layers label {
   font-weight: normal;
-  margin-bottom: 0px; }
-
+  margin-bottom: 0px;
+}
 .leaflet-control-layers-list input[type="radio"], input[type="checkbox"] {
-  margin: 2px; }
-
+  margin: 2px;
+}
 .table {
-  margin-bottom: 0px; }
-
+  margin-bottom: 0px;
+}
 .navbar .navbar-brand {
   font-weight: bold;
   font-size: 25px;
-  color: #FF7300; }
-
-.navbar-inverse .navbar-nav > li > a,
+  color: $orange;
+}
+.navbar-inverse .navbar-nav>li>a,
 .navbar-inverse .navbar-brand:focus, .navbar-inverse .navbar-brand:hover {
-  color: #BEBEBE; }
+	color: $silver;
+}
 
 .navbar-collapse.in {
-  overflow-y: hidden; }
-
+  overflow-y: hidden;
+}
 .navbar-header .navbar-icon-container {
-  margin-right: 15px; }
-
+  margin-right: 15px;
+}
 .navbar-header .navbar-icon {
   line-height: 50px;
-  height: 50px; }
-
+  height: 50px;
+}
 .navbar-header a.navbar-icon {
-  margin-left: 25px; }
+  margin-left: 25px;
+}
+
 
 .has-feedback .form-control-feedback {
   position: absolute;
@@ -139,65 +150,82 @@ input[type="radio"], input[type="checkbox"] {
   width: 34px;
   height: 34px;
   line-height: 34px;
-  text-align: center; }
-
+  text-align: center;
+}
 @media (max-width: 992px) {
   .navbar .navbar-brand {
-    font-size: 18px; } }
-@media (max-width: 767px) {
+    font-size: 18px;
+  }
+}
+@media (max-width: 767px){
   #sidebar {
-    display: none; }
-
+    display: none;
+  }
   .url-break {
     word-break: break-all;
     word-break: break-word;
     -webkit-hyphens: auto;
-    hyphens: auto; }
-
-  .dropdown-menu a i {
-    color: #FFFFFF; } }
+      hyphens: auto;
+  }
+  .dropdown-menu a i{
+    color: #FFFFFF;
+  }
+}
 /* Print Handling */
 @media print {
   .navbar {
-    display: none !important; }
-
+    display: none !important;
+  }
   .leaflet-control-container {
-    display: none !important; } }
-.leaflet-control-container .leaflet-timeline-controls {
-  box-sizing: border-box;
-  width: 100%;
-  margin: 0;
-  margin-bottom: 15px; }
+    display: none !important;
+  }
+}
+.leaflet-control-container .leaflet-timeline-controls{
+        box-sizing: border-box;
+        width: 100%;
+        margin: 0;
+        margin-bottom: 15px;
+      }
 
 .leaflet-timeline-controls button {
-  padding: 5%; }
+    padding:5%;
+}
+
+
 
 /*
 Geolocation
 */
+
 .leaflet-control-locate.active.following a {
-  color: #FF7300; }
+  color: $orange;
+}
 
 /*
 Geocoder
 */
-.photon-input:focus {
-  max-width: 300px;
-  transition: width 0.5s;
-  background-image: none; }
 
-.photon-input {
-  width: 34px;
+.photon-input:focus {
+    max-width: 300px;
+    transition:width 0.5s;
+    background-image: none;
+
+}
+
+.photon-input{
+  width:34px;
   background-image: url(../img/geocoder.png);
   background-position: center;
-  background-repeat: no-repeat; }
+  background-repeat: no-repeat;
+
+}
 
 /*
 Typeahead (not used currently)
 */
 .typeahead {
-  background-color: #FFFFFF; }
-
+  background-color: #FFFFFF;
+}
 .tt-dropdown-menu {
   background-color: #FFFFFF;
   border: 1px solid rgba(0, 0, 0, 0.2);
@@ -207,35 +235,39 @@ Typeahead (not used currently)
   padding: 4px 0;
   width: 100%;
   max-height: 300px;
-  overflow: auto; }
-
+  overflow: auto;
+}
 .tt-suggestion {
   font-size: 14px;
   line-height: 20px;
-  padding: 3px 10px; }
-
+  padding: 3px 10px;
+}
 .tt-suggestion.tt-cursor {
   background-color: #0097CF;
   color: #FFFFFF;
-  cursor: pointer; }
-
+  cursor: pointer;
+}
 .tt-suggestion p {
-  margin: 0; }
-
+  margin: 0;
+}
 .tt-suggestion + .tt-suggestion {
-  border-top: 1px solid #ccc; }
+  border-top: 1px solid #ccc;
+}
 
 .tt-suggestion {
-  background-color: white; }
-
+    background-color: white;
+}
 .tt-suggestion.tt-cursor, .tt-suggestion:hover {
   background-color: #0097CF;
   color: #FFFFFF;
-  cursor: pointer; }
+  cursor: pointer;
+}
 
 .typeahead-header {
   margin: 0 5px 5px 5px;
   padding: 3px 0;
-  border-bottom: 2px solid #333; }
+  border-bottom: 2px solid #333;
+}
 
-/*# sourceMappingURL=app.css.map */
+
+

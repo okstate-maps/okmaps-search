@@ -3,14 +3,14 @@ var CONTAINS_BOOST = 100, CONTAINS_CENTROID_BOOST = 10, INTERSECTS_BOOST = 1;
 var MAP_PIXEL_AREA;
 var CARTO_USER = "krdyke";
 var TABLE_NAME = "bbox_test_set3";
-var PER_PAGE = 100;
+var PER_PAGE = 50;
 var QUERY_URL = "https://{username}.carto.com/api/v2/sql?q=".replace("{username}", CARTO_USER);
 //var carto_fields = ["the_geom", "title", "title_article_split",
 //    "subject_headings", "url", "year_start", "year_end", "city","county"];
 var TABLE_FIELDS = ["the_geom", "title", "cartodb_id", "original_date","contentdm_number"];
 var BASE_URL = "SELECT {fields} FROM {table_name}";
 var IMAGE_URL = "http://dc.library.okstate.edu/utils/ajaxhelper/?CISOROOT=OKMaps&CISOPTR={{contentdm_number}}&action=2&DMSCALE=100&DMWIDTH={{width}}&DMHEIGHT={{height}}&DMX=0&DMY=0&DMTEXT=&DMROTATE=0";
-
+var AUTOSEARCH;
 
 var carto_url = BASE_URL
     .replace("{table_name}", TABLE_NAME)
@@ -365,6 +365,7 @@ function filterRankFeatures3(page_number){
           //addtoFeatureList(l);
           featuresTemp.push({
             "cdm": l.feature.properties.contentdm_number,
+            "carto": l.feature.properties.cartodb_id,
             "id": L.stamp(l),
             "bbox": l.getBounds().toBBoxString(),
             "feature-name": l.feature.properties.title,
@@ -413,6 +414,10 @@ function getBoundsArea(bounds){
   return ne.distanceTo(nw) * ne.distanceTo(se);
 }
 
+function syncUrlHash(){
+  location.hash = map.getBounds().toBBoxString();
+}
+
 function boundsToRbush(bounds){
   var sw = bounds.getSouthWest();
   var ne = bounds.getNorthEast();
@@ -430,6 +435,16 @@ function addtoFeatureList(layer){
      '" data-bbox="' + layer.getBounds().toBBoxString() + '"><td class="feature-name">' +
      layer.feature.properties.title + '</td><td class="feature-sort-name">' + 
      layer.feature.properties.original_date + '</td></tr>');
+}
+
+$("#search-on-map-move").change(function(e){
+  if (this.checked){
+    syncSidebar();
+  }
+});
+
+function autosearchOn(){
+  return $("#search-on-map-move").get()[0].checked;
 }
 
 function syncSidebar() {
@@ -515,21 +530,16 @@ var cartoLight = L.tileLayer("https://cartodb-basemaps-{s}.global.ssl.fastly.net
   maxZoom: 19,
   attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, &copy; <a href="https://cartodb.com/attributions">CartoDB</a>'
 });
-var usgsImagery = L.layerGroup([L.tileLayer("http://basemap.nationalmap.gov/arcgis/rest/services/USGSImageryOnly/MapServer/tile/{z}/{y}/{x}", {
-  maxZoom: 15,
-}), L.tileLayer.wms("http://raster.nationalmap.gov/arcgis/services/Orthoimagery/USGS_EROS_Ortho_SCALE/ImageServer/WMSServer?", {
-  minZoom: 16,
+var mapboxSatellite = L.tileLayer("https://api.mapbox.com/styles/v1/mapbox/satellite-streets-v9/tiles/256/{z}/{x}/{y}?access_token=pk.eyJ1Ijoia3JkeWtlIiwiYSI6Ik15RGcwZGMifQ.IR_NpAqXL1ro8mFeTIdifg", {
   maxZoom: 19,
-  layers: "0",
-  format: 'image/jpeg',
-  transparent: true,
-  attribution: "Aerial Imagery courtesy USGS"
-})]);
+  detectRetina: true,
+ attribution: "&copy; Mapbox"
+});
 
 /* Overlay Layers */
 var highlight = L.geoJson(null);
 var highlightStyle = {
-  color: "#ff6600",
+  color: "#ff7300",
   weight: 1
 };
 
@@ -651,14 +661,14 @@ var okmaps = L.geoJson(null, {
         }
       });
 
-     addtoFeatureList(layer);
+     //addtoFeatureList(layer);
       
-      okmapsSearch.push({
-        name: layer.feature.properties.title,
-        source: "Maps",
-        id: L.stamp(layer),
-        bbox: layer.getBounds(),
-      });
+      // okmapsSearch.push({
+      //   name: layer.feature.properties.title,
+      //   source: "Maps",
+      //   id: L.stamp(layer),
+      //   bbox: layer.getBounds(),
+      // });
     }
   }
 });
@@ -672,14 +682,19 @@ sql(carto_url, function (data) {
   // tree.load(tree_nodes);
   featureList = new List("features", {
     valueNames: [{data:["cdm"]},
+                 {data:["carto"]},
                  {data:["id"]}, 
                  {data:["bbox"]}, 
                  "feature-name", 
-                 "feature-sort-name"]
+                 "feature-sort-name"],
+    item: "<tr class='feature-row'><td data-cdm='1' data-carto='4' data-id='2' data-bbox='3' class='feature-name'>"+
+      "foo</td><td class='feature-sort-name'>bar" + 
+      "</td></tr>"
    // page:50
    });
 
   map.addLayer(okmapsLayer);
+  map.fire("moveend");
 });
 //
 // /* Empty layer placeholder to add to layer control for listening when to add/remove museums to markerClusters layer */
@@ -728,15 +743,109 @@ function myHandler(geojson) {
     console.debug(geojson);
 }
 
-function onSelectedHandler(geojson){
-  var bounds = [[geojson.properties.extent[1], 
-                 geojson.properties.extent[0]],
-                [geojson.properties.extent[3], 
-                 geojson.properties.extent[2]]
-              ];
-  L.rectangle(bounds, highlightStyle).addTo(highlight);
-  map.fitBounds(bounds);
+function animateIcon(){
+   var icon = $('.animated-icon').get()[0];
+  
+   setTimeout(function(){
+      icon.style.width = '50px';
+      icon.style.height = '50px';
+      icon.style.marginLeft = '-25px';
+      icon.style.marginTop = '-25px';
+    }, 300);
+
+    setTimeout(function(){
+      icon.style.width = '30px';
+      icon.style.height = '30px';
+      icon.style.marginLeft = '-15px';
+      icon.style.marginTop = '-15px';
+    }, 900);
+
+    setTimeout(function(){
+      icon.style.width = '50px';
+      icon.style.height = '50px';
+      icon.style.marginLeft = '-25px';
+      icon.style.marginTop = '-25px';
+    }, 1500);
+
+    setTimeout(function(){
+      icon.style.width = '30px';
+      icon.style.height = '30px';
+      icon.style.marginLeft = '-15px';
+      icon.style.marginTop = '-15px';
+    }, 2100);
+
+    setTimeout(function(){
+      icon.style.width = '50px';
+      icon.style.height = '50px';
+      icon.style.marginLeft = '-25px';
+      icon.style.marginTop = '-25px';
+    }, 2700);
+
+    setTimeout(function(){
+      icon.style.width = '30px';
+      icon.style.height = '30px';
+      icon.style.marginLeft = '-15px';
+      icon.style.marginTop = '-15px';
+    }, 3300);
+
+
 }
+
+function onSelectedHandler(geojson){
+  if (geojson.properties.hasOwnProperty("extent")){
+    var bounds = [[geojson.properties.extent[1], 
+                   geojson.properties.extent[0]],
+                  [geojson.properties.extent[3], 
+                   geojson.properties.extent[2]]
+            ];
+
+    var r = L.rectangle(bounds, {
+      fillColor: "#ff7300",
+      stroke: false
+    });
+
+    r.addTo(map);
+    map.fitBounds(bounds);
+    setTimeout(function(){
+      r.remove();
+    }, 3000);
+  }
+  else if (geojson.geometry.hasOwnProperty("coordinates") &&
+           geojson.geometry.coordinates.length === 2){
+    var latlng = geojson.geometry.coordinates.reverse();
+    map.setView(latlng, 13, {
+      maxZoom:14
+    });
+
+    var icon = L.divIcon({
+      iconSize: [30, 30],
+      iconAnchor: [15, 15],
+      popupAnchor: [10, 0],
+      shadowSize: [0, 0],
+      className: 'animated-icon',
+      html: ''
+    });
+
+    var m = L.marker(latlng, {
+      icon: icon
+    });
+
+    m.on('add', function(){
+      animateIcon();
+    });
+      
+    m.addTo(map);
+    setTimeout(function(){
+      m.remove();
+    }, 4000);
+    
+    //window.setTimeout(function(){m.remove();},3000);
+
+
+
+  }  
+}
+
 
 map = L.map("map", {
   zoom: 7,
@@ -774,10 +883,10 @@ var searchControl = L.control.photon({
       onSelected: onSelectedHandler,
       resultsHandler: myHandler,
       placeholder: '',
-      position: 'topleft'
+      position: 'topright'
   });
 
-searchControl.addTo(map);
+
 
 /* Layer control listeners that allow for a single markerClusters layer */
 map.on("overlayadd", function(e) {
@@ -805,7 +914,10 @@ map.on("overlayremove", function(e) {
 /* Filter sidebar feature list to only show features in current map bounds */
 map.on("moveend", function (e) {
   //var start = performance.now();
-  syncSidebar();
+  if (autosearchOn()){
+    syncSidebar();
+  }
+  syncUrlHash();
   //var end = performance.now();
   //console.log("syncSidebar took " + (end - start) + " milliseconds.");
 });
@@ -883,7 +995,7 @@ if (document.body.clientWidth <= 767) {
 
 var baseLayers = {
   "Street Map": cartoLight,
-  "Aerial Imagery": usgsImagery
+  "Satellite": mapboxSatellite
 };
 
 var groupedOverlays = {
@@ -896,6 +1008,8 @@ var groupedOverlays = {
 var layerControl = L.control.groupedLayers(baseLayers, groupedOverlays, {
   collapsed: isCollapsed
 }).addTo(map);
+
+searchControl.addTo(map);
 
 /* Highlight search box text on click */
 $("#searchbox").click(function () {
@@ -1000,6 +1114,7 @@ $(document).on("ajaxStop", function () {
   $(".twitter-typeahead").css("position", "static");
   $(".twitter-typeahead").css("display", "block");
 });
+
 
 // Leaflet patch to make layer control scrollable on touch browsers
 var container = $(".leaflet-control-layers")[0];
