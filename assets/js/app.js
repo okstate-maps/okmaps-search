@@ -883,7 +883,8 @@ var searchControl = L.control.photon({
       onSelected: onSelectedHandler,
       resultsHandler: myHandler,
       placeholder: '',
-      position: 'topright'
+      position: 'topright',
+      url: "https://photon.komoot.de/api/?"
   });
 
 
