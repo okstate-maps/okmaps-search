@@ -93,8 +93,19 @@ input[type="radio"], input[type="checkbox"] {
   background-color: #F5F5F5;
   border-top: 1px solid #ddd; }
 
+.sidebar-footer button {
+  background-color: #BEBEBE;
+  border-color: #BEBEBE;
+  transition: background-color 0.25s, border-color 0.25s, color 0.25s; }
+
+.sidebar-footer button:hover {
+  color: white;
+  background-color: #999999;
+  border-color: #999999; }
+
 .table-hover > tbody > tr:hover {
-  background-color: #FF9900; }
+  /* border: 2px solid $light-orange; */
+  background-color: #F7DBC3; }
 
 .leaflet-control-layers {
   overflow: auto; }

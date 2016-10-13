@@ -2,8 +2,9 @@ var map, featureList, tree, tree_nodes = [], boroughSearch = [], okmapsSearch = 
 var CONTAINS_BOOST = 100, CONTAINS_CENTROID_BOOST = 10, INTERSECTS_BOOST = 1;
 var MAP_PIXEL_AREA;
 var CARTO_USER = "krdyke";
-var TABLE_NAME = "bbox_test_set3";
+var TABLE_NAME = "bbox_test_set4";
 var PER_PAGE = 50;
+var PAGE_NUMBER = 1;
 var QUERY_URL = "https://{username}.carto.com/api/v2/sql?q=".replace("{username}", CARTO_USER);
 //var carto_fields = ["the_geom", "title", "title_article_split",
 //    "subject_headings", "url", "year_start", "year_end", "city","county"];
@@ -337,8 +338,8 @@ function buildFilterRankQuery(input_bounds, offset){
     return q;
 }
 
-function filterRankFeatures3(page_number){
-  var offset = (page_number - 1) * PER_PAGE || 0;
+function filterRankFeatures3(){
+  var offset = (PAGE_NUMBER - 1) * PER_PAGE || 0;
   console.log("filterRankFeatures3");
   featuresTemp = [];
   var f,fbbox,fcent,dist;
@@ -379,30 +380,6 @@ function filterRankFeatures3(page_number){
     console.log("matching by id:  "+ (end - start) + " milliseconds.");
     
   },"json");
-  // var bbox_area = getBoundsArea(bbox);
-  // var cent = bbox.getCenter();
-  // var lyrs = okmaps.getLayers();
-  //intersecteds = tree.search(boundsToRbush(bbox));
-  // var i = lyrs.length - 1;
-  // for (i; i >= 0; i--){
-  //   f = lyrs[i];
-  //   fbbox = f.getBounds();
-  //   fbbox_area = getBoundsArea(fbbox);
-  //   fcent = fbbox.getCenter();
-  //   dist = cent.distanceTo(fcent);
-
-  //   if (bbox.contains(fbbox)){
-  //    f.feature.properties.spatialScore = Math.abs(1 - (fbbox_area/bbox_area));   
-  //    addtoFeatureList(f);
-  //   }
-
-  //   else if (bbox.contains(fcent)){
-  //     f.feature.properties.spatialScore = Math.abs(1 - (fbbox_area/bbox_area)) + dist;
-  //     addtoFeatureList(f);
-  //   }
-    
-  // }
-
 }
 
 
@@ -446,6 +423,19 @@ $("#search-on-map-move").change(function(e){
 function autosearchOn(){
   return $("#search-on-map-move").get()[0].checked;
 }
+
+$("#more-results").click(function(e){
+  PAGE_NUMBER++;
+  $("#loading").show();
+  filterRankFeatures3(okmaps).then(function(){
+      featureList.add(featuresTemp);
+      $("#loading").hide();
+    }, function(err){
+      console.log(err);
+      $("#loading").hide();        
+    });
+});
+
 
 function syncSidebar() {
   console.log("syncSidebar");
@@ -807,7 +797,7 @@ function onSelectedHandler(geojson){
     r.addTo(map);
     map.fitBounds(bounds);
     setTimeout(function(){
-      r.remove();
+      $(r.getElement()).fadeOut({"complete": function(){r.remove();}});
     }, 3000);
   }
   else if (geojson.geometry.hasOwnProperty("coordinates") &&
@@ -836,7 +826,7 @@ function onSelectedHandler(geojson){
       
     m.addTo(map);
     setTimeout(function(){
-      m.remove();
+      $(m.getElement()).fadeOut({"complete": function(){m.remove();}});
     }, 4000);
     
     //window.setTimeout(function(){m.remove();},3000);
@@ -887,18 +877,12 @@ var searchControl = L.control.photon({
       url: "https://photon.komoot.de/api/?"
   });
 
-
-
 /* Layer control listeners that allow for a single markerClusters layer */
 map.on("overlayadd", function(e) {
   if (e.layer === okmapsLayer) {
     //markerClusters.addLayer(okmaps);
     syncSidebar();
   }
-  // if (e.layer === museumLayer) {
-  //   markerClusters.addLayer(museums);
-  //   syncSidebar();
-  // }
 });
 
 map.on("overlayremove", function(e) {
@@ -906,21 +890,15 @@ map.on("overlayremove", function(e) {
     //markerClusters.removeLayer(okmaps);
     syncSidebar();
   }
-  // if (e.layer === museumLayer) {
-  //   markerClusters.removeLayer(museums);
-  //   syncSidebar();
-  // }
 });
 
 /* Filter sidebar feature list to only show features in current map bounds */
 map.on("moveend", function (e) {
-  //var start = performance.now();
+  PAGE_NUMBER = 1;
   if (autosearchOn()){
     syncSidebar();
   }
   syncUrlHash();
-  //var end = performance.now();
-  //console.log("syncSidebar took " + (end - start) + " milliseconds.");
 });
 
 /* Clear feature highlight when map is clicked */
@@ -1011,6 +989,9 @@ var layerControl = L.control.groupedLayers(baseLayers, groupedOverlays, {
 }).addTo(map);
 
 searchControl.addTo(map);
+$("input.photon-input").on("focusout", function(e){
+  $(this).val("");
+});
 
 /* Highlight search box text on click */
 $("#searchbox").click(function () {
