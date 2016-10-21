@@ -96,7 +96,11 @@ input[type="radio"], input[type="checkbox"] {
 .sidebar-footer button {
   background-color: #BEBEBE;
   border-color: #BEBEBE;
-  transition: background-color 0.25s, border-color 0.25s, color 0.25s; }
+  transition: background-color 0.25s, border-color 0.25s, color 0.25s;
+  position: relative;
+  width: 80%;
+  left: 10%;
+  margin-top: 5px; }
 
 .sidebar-footer button:hover {
   color: white;
@@ -192,6 +196,12 @@ Geolocation
 /*
 Geocoder
 */
+div.leaflet-photon {
+  box-shadow: 0 1px 5px rgba(0, 0, 0, 0.4); }
+
+div.leaflet-photon input.photon-input {
+  border: none; }
+
 .photon-input:focus {
   max-width: 300px;
   transition: width 0.5s;
@@ -202,6 +212,15 @@ Geocoder
   background-image: url(../img/geocoder.png);
   background-position: center;
   background-repeat: no-repeat; }
+
+/*
+Slider (for year filtering)
+*/
+.slider.slider-horizontal {
+  width: 80%;
+  min-width: 210px;
+  margin-top: 40px;
+  margin-left: 10%; }
 
 /*
 Typeahead (not used currently)
