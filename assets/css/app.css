@@ -31,11 +31,9 @@ input[type="radio"], input[type="checkbox"] {
 
 #loading {
   position: absolute;
-  width: 220px;
-  height: 19px;
+  color: #FF7300;
   top: 50%;
   left: 50%;
-  margin: -10px 0 0 -110px;
   z-index: 20001; }
 
 #features {
@@ -216,6 +214,9 @@ div.leaflet-photon input.photon-input {
 /*
 Slider (for year filtering)
 */
+.slider-handle {
+  cursor: pointer; }
+
 .slider.slider-horizontal {
   width: 80%;
   min-width: 210px;

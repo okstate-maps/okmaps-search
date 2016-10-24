@@ -1,3 +1,52 @@
+//Object.keys polyfill
+// From https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/keys
+if (!Object.keys) {
+  Object.keys = (function() {
+    'use strict';
+    var hasOwnProperty = Object.prototype.hasOwnProperty,
+        hasDontEnumBug = !({ toString: null }).propertyIsEnumerable('toString'),
+        dontEnums = [
+          'toString',
+          'toLocaleString',
+          'valueOf',
+          'hasOwnProperty',
+          'isPrototypeOf',
+          'propertyIsEnumerable',
+          'constructor'
+        ],
+        dontEnumsLength = dontEnums.length;
+
+    return function(obj) {
+      if (typeof obj !== 'object' && (typeof obj !== 'function' || obj === null)) {
+        throw new TypeError('Object.keys called on non-object');
+      }
+
+      var result = [], prop, i;
+
+      for (prop in obj) {
+        if (hasOwnProperty.call(obj, prop)) {
+          result.push(prop);
+        }
+      }
+
+      if (hasDontEnumBug) {
+        for (i = 0; i < dontEnumsLength; i++) {
+          if (hasOwnProperty.call(obj, dontEnums[i])) {
+            result.push(dontEnums[i]);
+          }
+        }
+      }
+      return result;
+    };
+  }());
+}
+
+// End polyfills and what nots
+//////////////////////////////////////////////////
+//////////////////////////////////////////////////
+//////////////////////////////////////////////////
+
+
 var map, featureList, tree, tree_nodes = [],
  boroughSearch = [], okmapsSearch = [], museumSearch = [], 
  timeline_added = false, featuresTemp = [];
@@ -7,13 +56,20 @@ okm.util = {};
 okm.map = {};
 okm.sidebar = {};
 okm.filter = {};
+//criteria obj keys must correspond to table fields
+okm.filter.criteria = {};
 okm.map.layers = {};
+okm.map.styles = {};
+okm.map.styles.highlight = {
+        color: "#ff7300",
+        weight: 1
+      };
 okm.G.CARTO_USER = "krdyke";
 okm.G.MB_TOKEN = "pk.eyJ1Ijoia3JkeWtlIiwiYSI6Ik15RGcwZGMifQ.IR_NpAqXL1ro8mFeTIdifg";
-okm.G.TABLE_NAME = "bbox_test_set4";
+okm.G.TABLE_NAME = "okmaps";
 okm.G.PER_PAGE = 50;
 okm.G.PAGE_NUMBER = 1;
-okm.G.QUERY_URL = "https://{username}.carto.com/api/v2/sql?q=".replace("{username}", okm.G.CARTO_USER);
+okm.G.QUERY_URL = "https://{username}.carto.com/api/v2/sql".replace("{username}", okm.G.CARTO_USER);
 okm.G.BASE_URL = "SELECT {fields} FROM {table_name}";
 okm.G.TABLE_FIELDS = ["the_geom", 
   "title", 
@@ -51,22 +107,26 @@ okm.util.array_max = function(arr) {
 
 
 okm.util.sql = function(query, callback, format){
-        var format_str = '';
-        if (format){
-            format_str = "&format=" + format;
-        }
-        else {
-            format_str = "&format=geojson";
-        }
-        return $.ajax({
-            url: okm.G.QUERY_URL + encodeURIComponent(query) + format_str,
-            type: "GET",
-            dataType: "json",
-            success: callback,
-            error: function(err){
-                console.log(err);
-            }
-        });
+  var format_str = '';
+  if (format){
+      format_str = format;
+  }
+  else {
+      format_str = "geojson";
+  }
+  return $.ajax({
+      url: okm.G.QUERY_URL,
+      data: {
+        format: format_str,
+        q: query
+      },
+      type: "POST",
+      dataType: "json",
+      success: callback,
+      error: function(err){
+          console.log(err);
+      }
+  });
 };
 
 $(window).resize(function() {
@@ -75,18 +135,15 @@ $(window).resize(function() {
 
 $(document).on("click", ".feature-row", function(e) {
   $(document).off("mouseout", ".feature-row", clearHighlight);
-  sidebarClick(parseInt($(this).attr("data-id"), 10));
+  sidebarClick(parseInt($(this).data("id"), 10));
 });
 
 if ( !("ontouchstart" in window) ) {
   $(document).on("mouseover", ".feature-row", function(e) {
-    var bbox_str = $(this).attr("data-bbox");
+    var bbox_str = $(this).data("bbox");
     var a = bbox_str.split(","); 
     var b = L.latLngBounds([a[1],a[0]], [a[3],a[2]]);
-    var rect = L.rectangle(b, {
-        color: "#ff7300",
-        weight: 1
-      });
+    var rect = L.rectangle(b, okm.map.styles.highlight);
     okm.map.layers.highlight.clearLayers().addLayer(rect);
   });
 }
@@ -107,7 +164,7 @@ $("#filter-options").click(function(){
 });
 
 $("#full-extent-btn").click(function() {
-  map.fitBounds(okmaps.getBounds());
+  map.fitBounds(okm.map.layers.okmaps.getBounds());
   $(".navbar-collapse.in").collapse("hide");
   return false;
 });
@@ -144,8 +201,14 @@ $("#sidebar-hide-btn").click(function() {
   return false;
 });
 
+$("#filterModal").on("hide.bs.modal", function(){
+  okm.sidebar.sync();
+});
+
 function addToHighlight(feature){
-  okm.map.layers.highlight.clearLayers().addData(feature).setStyle(highlightStyle);
+  okm.map.layers.highlight.clearLayers()
+    .addData(feature)
+    .setStyle(okm.map.styles.highlight);
 }
 
 okm.filter.year = function(features){
@@ -173,7 +236,7 @@ okm.filter.year = function(features){
   $('#facet2 .tooltip-max').css({'margin-left': '-22px'});
 
   $("#yearSlider").on("slideStop", function(e){
-    console.log(e.value.join("-"));
+    okm.filter.criteria.original_date = e.value;
   });
 };
 
@@ -198,11 +261,10 @@ okm.filter.collection = function(features){
     }
   });
 
-
   ul = $("#facet1 ul");
-  li = $("#facet1 ul li");
-  label = $("#facet1 ul li label");
-  input = $("#facet1 ul li label input");
+  li = $("#facet1 li");
+  label = $("#facet1 label");
+  input = $("#facet1 input");
   for (var i = 0; i < nest.length; i++){
     clone = li.clone();
     clone.find("label").html(label.html() + nest[i].key);
@@ -211,16 +273,29 @@ okm.filter.collection = function(features){
   }
   li.remove();
   
-  $("ul.facet1-list li").change(function(e){
-    
+  $("#facet1 input").change(function(e){
+    okm.filter.criteria.collection = okm.filter.get_input_values($("#facet1 input"));
   });
 
 };
 
-function calculateFilterValues(features){
+
+okm.filter.get_input_values = function(elems){
+  values = elems.filter(function(){
+    return this.checked;
+  }).map(function(){
+    return this.value;
+  });
+
+  return values.get();
+};
+
+
+
+okm.filter.init = function(features){
   okm.filter.collection(features);
   okm.filter.year(features);
-}
+};
 
 
 function animateSidebar() {
@@ -250,91 +325,79 @@ function sidebarClick(id) {
   }
 }
 
-function filterRankFeatures(){
-  var f,fbbox,fcent,dist;
-  var bbox = map.getBounds();
-  var bbox_area = getBoundsArea(bbox);
-  var cent = bbox.getCenter();
-  
-  intersecteds = tree.search(boundsToRbush(bbox));
-  var i = intersecteds.length - 1;
-  for (i; i >= 0; i--){
-    f = okmaps.getLayer(intersecteds[i].leaflet_id);
-    fbbox = f.getBounds();
-    fbbox_area = getBoundsArea(fbbox);
-    fcent = fbbox.getCenter();
-    dist = cent.distanceTo(fcent);
 
-    if (bbox.contains(fbbox)){
-     f.feature.properties.spatialScore = Math.abs(1 - (fbbox_area/bbox_area));   
-     addtoFeatureList(f);
-    }
-
-    else if (bbox.contains(fcent)){
-      f.feature.properties.spatialScore = Math.abs(1 - (fbbox_area/bbox_area)) + dist;
-      addtoFeatureList(f);
-    }
-    
-  }
-  $("#loading").hide();
-}
-
-function filterRankFeatures2(){
-  console.log("filterRankFeatures2");
-  var f,fbbox,fcent,dist;
-  var bbox = map.getBounds();
-  var bbox_area = getBoundsArea(bbox);
-  var cent = bbox.getCenter();
-  var lyrs = okmaps.getLayers();
-  //intersecteds = tree.search(boundsToRbush(bbox));
-  var i = lyrs.length - 1;
-  for (i; i >= 0; i--){
-    f = lyrs[i];
-    fbbox = f.getBounds();
-    fbbox_area = getBoundsArea(fbbox);
-    fcent = fbbox.getCenter();
-    dist = cent.distanceTo(fcent);
-
-    if (bbox.contains(fbbox)){
-     f.feature.properties.spatialScore = Math.abs(1 - (fbbox_area/bbox_area));   
-     addtoFeatureList(f);
-    }
-
-    else if (bbox.contains(fcent)){
-      f.feature.properties.spatialScore = Math.abs(1 - (fbbox_area/bbox_area)) + dist;
-      addtoFeatureList(f);
-    }
-    
-  }
-  $("#loading").hide();
-}
-
-function bboxStringToWKT(bbox_str){
+okm.util.bboxStringToWKT = function(bbox_str){
   var bb = bbox_str.split(",");
   return "POLYGON((" + bb[0] + " " + bb[1] + "," + bb[0] + " " + bb[3]+
    "," + bb[2] + " " + bb[3]+ "," + bb[2] + " " + bb[1] +
    "," + bb[0] + " " + bb[1] + "))";
-}
+};
+
 
 function buildFilterRankQuery(input_bounds, offset){
-  var bbox_wkt = bboxStringToWKT(input_bounds.toBBoxString());
+  var nonspatial_filters = okm.filter.build_where();
+  var bbox_wkt = okm.util.bboxStringToWKT(input_bounds.toBBoxString());
   var url = okm.G.BASE_URL.replace("{username}", okm.G.CARTO_USER)
     .replace("{table_name}", okm.G.TABLE_NAME)
     .replace("{fields}", "cartodb_id");
+  var q = "SELECT cartodb_id, sort_order from ((" + 
+    //first set of results is those whose bbox is entirely contained
+    //within the viewport, sorted by area from largest to smallest
+    "SELECT 1 as sort_order, cartodb_id FROM {{table_name}} as b1 WHERE" +
+      " ST_GeomFromText('" + 
+      bbox_wkt + "', 4326) ~ the_geom " + nonspatial_filters + 
+      "ORDER BY st_area(the_geom) DESC)" +
+    " UNION ALL (" + 
 
-  // var q = url + " WHERE ST_GeomFromText('" + bbox_wkt +"', 4326)"+
-  //   " ~ the_geom  ORDER BY the_geom <#> ST_GeomFromText('" + bbox_wkt +
-  //   "', 4326),st_area(the_geom) DESC LIMIT 100";
+    //second set is those bboxes with centroids falling within the viewport
+    //sorted by distance between
+    "SELECT 2 as sort_order, cartodb_id FROM {{table_name}} WHERE" +
+      " ST_Centroid(the_geom) @ ST_GeomFromText('" + 
+      bbox_wkt + "', 4326) " + nonspatial_filters +
+      " ORDER BY ST_Centroid(the_geom) <#> ST_GeomFromText('" + 
+      bbox_wkt + "', 4326))" +
 
-  var q = "SELECT cartodb_id, sort_order from ((SELECT 1 as sort_order, cartodb_id FROM {{table_name}} as b1 WHERE ST_GeomFromText('" + 
-    bbox_wkt + "', 4326) ~ the_geom ORDER BY st_area(the_geom) DESC) UNION ALL (SELECT 2 as sort_order, cartodb_id FROM {{table_name}} WHERE ST_Centroid(the_geom) @ ST_GeomFromText('" + 
-    bbox_wkt + "', 4326) ORDER BY ST_Centroid(the_geom) <#> ST_GeomFromText('" + 
-    bbox_wkt + "', 4326))) as foobar LIMIT " + okm.G.PER_PAGE + " OFFSET " + offset;
-  
+    // Uncomment the following lines to include a third tier of results,
+    // those whose bounding box intersects the viewport in *any* way
+    // " UNION ALL (" + 
+    // "SELECT 3 as sort_order, cartodb_id FROM {{table_name}} WHERE" +
+    //   " ST_GeomFromText('" + 
+    //   bbox_wkt + "', 4326) && the_geom " + nonspatial_filters +
+    //   " ORDER BY the_geom <<->> ST_GeomFromText('" + 
+    //   bbox_wkt + "', 4326))" + 
+
+      ") as foobar LIMIT " + okm.G.PER_PAGE + " OFFSET " + offset;
   q = q.replace(/{{table_name}}/g, okm.G.TABLE_NAME);
-
-    return q;
+  return q;
 }
+
+
+okm.filter.build_where = function(properties){
+  var years;
+  var props = properties;
+  var filters = Object.keys(okm.filter.criteria);
+  var i = filters.length -1;
+  var q = "";
+
+  for (i; i >= 0; i--){
+
+    switch (filters[i]){
+
+      case "collection":
+        q = q + " AND collection in ('" + okm.filter.criteria.collection.join("','") + "') ";
+        break;
+
+      case "original_date":
+        years = okm.filter.criteria.original_date;
+        q = q + " AND original_date BETWEEN " + years[0] + " AND " + years[1] + " ";
+        break;
+      case "size":
+        break;
+    }
+    
+  }
+  return q;
+};
 
 function filterRankFeatures3(){
   var offset = (okm.G.PAGE_NUMBER - 1) * okm.G.PER_PAGE || 0;
@@ -373,6 +436,7 @@ function filterRankFeatures3(){
           break;
         }
       }
+      
     }
     end = performance.now();
     console.log("matching by id:  "+ (end - start) + " milliseconds.");
@@ -675,10 +739,7 @@ Modernizr.on("webp", function(support){
   /* Overlay Layers */
   okm.map.layers.highlight = L.geoJson(null, {
     "style": function(f){
-      return {
-        color: "#ff7300",
-        weight: 1
-      };
+      return okm.map.styles.highlight;
     }
   });
   
@@ -787,13 +848,13 @@ Modernizr.on("webp", function(support){
 
   /* Clear feature highlight when map is clicked */
   map.on("click", function(e) {
-    highlight.clearLayers();
+    okm.map.layers.highlight.clearLayers();
   });
 
 
   okm.util.sql(okm.G.CARTO_URL, function (data) {
     okmaps_geojson = data;
-    calculateFilterValues(data.features);
+    okm.filter.init(data.features);
 
     okm.map.layers.okmaps.addData(data);
     featureList = new List("features", {

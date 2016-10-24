@@ -52,7 +52,7 @@
               <a id="toolsDrop" href="#" role="button" class="dropdown-toggle" data-toggle="dropdown"><i class="fa fa-globe orange"></i>&nbsp;&nbsp;Tools <b class="caret"></b></a>
               <ul class="dropdown-menu">
                 <li><a href="#" data-toggle="collapse" data-target=".navbar-collapse.in" id="full-extent-btn"><i class="fa fa-arrows-alt"></i>&nbsp;&nbsp;Zoom To World</a></li>
-                <li><a href="#" data-toggle="collapse" data-target=".navbar-collapse.in" id="timeline-btn"><i class="fa fa-calendar-o"></i>&nbsp;&nbsp;Timeline</a></li>
+                <!--<li><a href="#" data-toggle="collapse" data-target=".navbar-collapse.in" id="timeline-btn"><i class="fa fa-calendar-o"></i>&nbsp;&nbsp;Timeline</a></li>-->
                 <!-- <li><a href="#" data-toggle="collapse" data-target=".navbar-collapse.in" id="legend-btn"><i class="fa fa-picture-o"></i>&nbsp;&nbsp;Show Legend</a></li> -->
                 <!-- <li class="divider hidden-xs"></li> -->
                 <!-- <li><a href="#" data-toggle="collapse" data-target=".navbar-collapse.in" id="login-btn"><i class="fa fa-user"></i>&nbsp;&nbsp;Login</a></li> -->
@@ -129,11 +129,7 @@
       <div id="map"></div>
     </div>
     <div id="loading">
-      <div class="loading-indicator">
-        <div class="progress progress-striped active">
-          <div class="progress-bar progress-bar-info progress-bar-full"></div>
-        </div>
-      </div>
+      <i class="fa fa-circle-o-notch fa-spin fa-3x fa-fw margin-bottom"></i>
     </div>
 
     <div class="modal fade" id="aboutModal" tabindex="-1" role="dialog">
@@ -215,7 +211,7 @@
             </ul>
             <div class="tab-content">
               <div id="facet1" class="tab-pane fade active in">
-                <ul class="list-group facet1-list">
+                <ul class="list-group">
                   <li class="list-group-item">
                     <label>
                       <input type="checkbox" checked value="">
@@ -226,6 +222,14 @@
               <div id="facet2" class="tab-pane fade">
 
                <input class="slider form-control" id="yearSlider" type="range"></input>
+
+               <div class="form-group">
+                <label for="asdf">
+                 Some of our maps don't have dates assigned (yet!). Check this box to include them in results.
+                </label>
+                <input id="asdf" type="checkbox"></input>
+              </div>
+               
               </div>
               <div id="facet3" class="tab-pane fade">
                
