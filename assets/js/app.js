@@ -169,6 +169,21 @@ $("#full-extent-btn").click(function() {
   return false;
 });
 
+$("#sidebar-size-increase").click(function(){
+  var current_width = +$("#sidebar").css("width").replace("px", "");
+  var body_width = +$("body").css("width").replace("px", "");
+  if (current_width < (body_width + 250)){
+    $("#sidebar,.panel-heading, .feature-row , .panel-body").css("width", (current_width + 250) + "px");
+  }
+});
+
+$("#sidebar-size-decrease").click(function(){
+  var current_width = +$("#sidebar").css("width").replace("px", "");
+  if (current_width > 350){
+    $("#sidebar,.panel-heading, .feature-row , .panel-body").css("width", (current_width - 250) + "px");
+  }
+});
+
 $("#legend-btn").click(function() {
   $("#legendModal").modal("show");
   $(".navbar-collapse.in").collapse("hide");
@@ -588,7 +603,7 @@ $("#more-results").click(function(e){
   /* Update list.js featureList */
 
 
-}
+};
 
 /* Basemap Layers */
 // var cartoLight = L.tileLayer("https://cartodb-basemaps-{s}.global.ssl.fastly.net/light_all/{z}/{x}/{y}.png", {
