@@ -67,10 +67,11 @@ okm.map.styles.highlight = {
 okm.G.CARTO_USER = "krdyke";
 okm.G.MB_TOKEN = "pk.eyJ1Ijoia3JkeWtlIiwiYSI6Ik15RGcwZGMifQ.IR_NpAqXL1ro8mFeTIdifg";
 okm.G.TABLE_NAME = "okmaps";
-okm.G.PER_PAGE = 50;
+okm.G.PER_PAGE = 10;
 okm.G.PAGE_NUMBER = 1;
 okm.G.QUERY_URL = "https://{username}.carto.com/api/v2/sql".replace("{username}", okm.G.CARTO_USER);
 okm.G.BASE_URL = "SELECT {fields} FROM {table_name}";
+okm.G.THUMBNAIL_URL = "http://dc.library.okstate.edu/utils/getthumbnail/collection/OKMaps/id/";
 okm.G.TABLE_FIELDS = ["the_geom", 
   "title", 
   "cartodb_id", 
@@ -431,7 +432,8 @@ function filterRankFeatures3(){
             "id": L.stamp(l),
             "bbox": l.getBounds().toBBoxString(),
             "feature-name": l.feature.properties.title,
-            "feature-sort-name":l.feature.properties.original_date
+            "feature-sort-name":l.feature.properties.original_date,
+            "feature-thumbnail":okm.G.THUMBNAIL_URL + l.feature.properties.contentdm_number
           });
           break;
         }
@@ -598,7 +600,7 @@ $("#more-results").click(function(e){
 
 function myHandler(geojson) {
     console.debug(geojson);
-}
+};
 
 function animateIcon(){
    var icon = $('.animated-icon').get()[0];
@@ -762,7 +764,7 @@ Modernizr.on("webp", function(support){
     onEachFeature: function (feature, layer) {
 
       if (feature.properties) {
-        var thumb_url = "http://dc.library.okstate.edu/utils/getthumbnail/collection/OKMaps/id/" + feature.properties.contentdm_number;
+        var thumb_url = okm.G.THUMBNAIL_URL + feature.properties.contentdm_number;
         var ref_url = "http://dc.library.okstate.edu/cdm/ref/collection/OKMaps/id/"+ feature.properties.contentdm_number;
         var content = "<table class='table table-striped table-bordered table-condensed'>" +
           "<tr><td>Title</td><td>" + feature.properties.title.replace("'","&#39;") + "</td></tr><tr><td>Thumbnail</td><td>"+
@@ -863,10 +865,11 @@ Modernizr.on("webp", function(support){
                    {data:["id"]}, 
                    {data:["bbox"]}, 
                    "feature-name", 
-                   "feature-sort-name"],
+                   "feature-sort-name",
+                   {name:"feature-thumbnail", attr:"src"}],
       item: "<tr class='feature-row'><td class='feature-name'>"+
         "</td><td class='feature-sort-name'>" + 
-        "</td></tr>"
+        "</td><td><div class='thumbnail-background'><img class='feature-thumbnail'/></div></td</tr>"
      // page:50
      });
 

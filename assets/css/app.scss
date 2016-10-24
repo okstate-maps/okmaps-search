@@ -18,17 +18,25 @@ input[type="radio"], input[type="checkbox"] {
 }
 #sidebar {
   display: block;
-  width: $sidebar-width;
   height: 100%;
   max-width: 100%;
   float: left;
 }
+
+#sidebar,.panel-heading, .feature-row , .panel-body{
+   width: $sidebar-width;
+}
+
 #map {
   width: auto;
   height: 100%;
   box-shadow: 0 0 10px rgba(0,0,0,0.5);
 }
 
+.thumbnail-background {
+  width: 160px;
+  height: 120px;
+}
 .animated-icon{
   width: 20px;
   height: 20px;
@@ -66,15 +74,8 @@ input[type="radio"], input[type="checkbox"] {
 .white {
   color: #FFFFFF;
 }
-.panel-heading{
-   width: $sidebar-width;
-}
-.panel-body{
-  width: $sidebar-width;
-}
 .feature-row {
   cursor: pointer;
-  width: $sidebar-width;
 }
 .autosearch {
   padding-top: 8px;
@@ -91,6 +92,12 @@ input[type="radio"], input[type="checkbox"] {
   bottom: 45px;
   overflow: auto;
 }
+.table>tbody>tr>td, .table>tbody>tr>th, 
+.table>tfoot>tr>td, .table>tfoot>tr>th, 
+.table>thead>tr>td, .table>thead>tr>th {
+  vertical-align: middle;
+}
+
 .sidebar-footer {
   height:45px;
   width:100%;
