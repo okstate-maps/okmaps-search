@@ -411,6 +411,7 @@ function filterRankFeatures3(){
   
   return okm.util.sql(q, function(d){
     var lyrs = okm.map.layers.okmaps.getLayers();
+    var full_title, short_title;
     var len = lyrs.length;
     var rows = d.rows;
     var ld = rows.length;
@@ -426,14 +427,19 @@ function filterRankFeatures3(){
         l = lyrs[j];
         if (cdb_id == l.feature.properties.cartodb_id){
           //addtoFeatureList(l);
+
+          full_title = l.feature.properties.title;
+          short_title = full_title.substr(0,50);
+          short_title = full_title.length > 50 ? short_title.substr(0, Math.min(short_title.length, short_title.lastIndexOf(" "))) + "..." : full_title;
           featuresTemp.push({
             "cdm": l.feature.properties.contentdm_number,
             "carto": l.feature.properties.cartodb_id,
             "id": L.stamp(l),
             "bbox": l.getBounds().toBBoxString(),
-            "feature-name": l.feature.properties.title,
+            "feature-name": short_title,
             "feature-sort-name":l.feature.properties.original_date,
-            "feature-thumbnail":okm.G.THUMBNAIL_URL + l.feature.properties.contentdm_number
+            "feature-thumbnail":okm.G.THUMBNAIL_URL + l.feature.properties.contentdm_number,
+            "feature-row": full_title          
           });
           break;
         }
@@ -590,7 +596,7 @@ $("#more-results").click(function(e){
   /* Update list.js featureList */
 
 
-}
+};
 
 /* Basemap Layers */
 // var cartoLight = L.tileLayer("https://cartodb-basemaps-{s}.global.ssl.fastly.net/light_all/{z}/{x}/{y}.png", {
@@ -600,7 +606,7 @@ $("#more-results").click(function(e){
 
 function myHandler(geojson) {
     console.debug(geojson);
-};
+}
 
 function animateIcon(){
    var icon = $('.animated-icon').get()[0];
@@ -866,7 +872,8 @@ Modernizr.on("webp", function(support){
                    {data:["bbox"]}, 
                    "feature-name", 
                    "feature-sort-name",
-                   {name:"feature-thumbnail", attr:"src"}],
+                   {name:"feature-thumbnail", attr:"src"},
+                   {name:"feature-row", attr:"title"}],
       item: "<tr class='feature-row'><td class='feature-name'>"+
         "</td><td class='feature-sort-name'>" + 
         "</td><td><div class='thumbnail-background'><img class='feature-thumbnail'/></div></td</tr>"
