@@ -46,6 +46,8 @@ if (!Object.keys) {
 //////////////////////////////////////////////////
 //////////////////////////////////////////////////
 
+//hide the address bar for mobile. hahahaha i don't care that it's a hack!
+window.scrollTo(0,1);
 
 var map, featureList, tree, tree_nodes = [],
  boroughSearch = [], okmapsSearch = [], museumSearch = [], 
@@ -67,16 +69,22 @@ okm.map.styles.highlight = {
 okm.G.CARTO_USER = "krdyke";
 okm.G.MB_TOKEN = "pk.eyJ1Ijoia3JkeWtlIiwiYSI6Ik15RGcwZGMifQ.IR_NpAqXL1ro8mFeTIdifg";
 okm.G.TABLE_NAME = "okmaps";
-okm.G.PER_PAGE = 50;
+okm.G.PER_PAGE = 10;
 okm.G.PAGE_NUMBER = 1;
 okm.G.QUERY_URL = "https://{username}.carto.com/api/v2/sql".replace("{username}", okm.G.CARTO_USER);
 okm.G.BASE_URL = "SELECT {fields} FROM {table_name}";
+okm.G.CDM_ROOT = "http://dc.library.okstate.edu";
+okm.G.REF_URL = okm.G.CDM_ROOT + "/cdm/ref/collection/OKMaps/id/";
+okm.G.IMG_URL = okm.G.CDM_ROOT + "/utils/ajaxhelper/?CISOROOT=OKMaps&CISOPTR={{contentdm_number}}&action=2&DMSCALE={{scale}}&DMWIDTH={{width}}&DMHEIGHT={{height}}&DMX=0&DMY=0&DMTEXT=&DMROTATE=0";
+okm.G.THUMBNAIL_URL = okm.G.CDM_ROOT + "/utils/getthumbnail/collection/OKMaps/id/";
 okm.G.TABLE_FIELDS = ["the_geom", 
   "title", 
   "cartodb_id", 
   "original_date",
   "contentdm_number",
   "collection",
+  "img_width",
+  "img_height",
   "size"];
 okm.G.CARTO_URL = okm.G.BASE_URL
     .replace("{table_name}", okm.G.TABLE_NAME)
@@ -159,6 +167,7 @@ $("#about-btn").click(function() {
 
 $("#filter-options").click(function(){
   $("#filterModal").modal("show");
+  okm.filter.filter_changed = false;
   $(".navbar-collapse.in").collapse("hide");
   return false;
 });
@@ -217,8 +226,11 @@ $("#sidebar-hide-btn").click(function() {
 });
 
 $("#filterModal").on("hide.bs.modal", function(){
-  okm.sidebar.sync();
+  if (okm.filter.filter_changed){
+    okm.sidebar.sync();
+  }
 });
+
 
 function addToHighlight(feature){
   okm.map.layers.highlight.clearLayers()
@@ -251,6 +263,7 @@ okm.filter.year = function(features){
   $('#facet2 .tooltip-max').css({'margin-left': '-22px'});
 
   $("#yearSlider").on("slideStop", function(e){
+    okm.filter.filter_changed = true;
     okm.filter.criteria.original_date = e.value;
   });
 };
@@ -289,6 +302,7 @@ okm.filter.collection = function(features){
   li.remove();
   
   $("#facet1 input").change(function(e){
+    okm.filter.filter_changed = true;
     okm.filter.criteria.collection = okm.filter.get_input_values($("#facet1 input"));
   });
 
@@ -425,6 +439,7 @@ function filterRankFeatures3(){
   
   return okm.util.sql(q, function(d){
     var lyrs = okm.map.layers.okmaps.getLayers();
+    var full_title, short_title;
     var len = lyrs.length;
     var rows = d.rows;
     var ld = rows.length;
@@ -440,13 +455,19 @@ function filterRankFeatures3(){
         l = lyrs[j];
         if (cdb_id == l.feature.properties.cartodb_id){
           //addtoFeatureList(l);
+
+          full_title = l.feature.properties.title;
+          short_title = full_title.substr(0,50);
+          short_title = full_title.length > 50 ? short_title.substr(0, Math.min(short_title.length, short_title.lastIndexOf(" "))) + "..." : full_title;
           featuresTemp.push({
             "cdm": l.feature.properties.contentdm_number,
             "carto": l.feature.properties.cartodb_id,
             "id": L.stamp(l),
             "bbox": l.getBounds().toBBoxString(),
-            "feature-name": l.feature.properties.title,
-            "feature-sort-name":l.feature.properties.original_date
+            "feature-name": short_title,
+            "feature-sort-name":l.feature.properties.original_date,
+            "feature-thumbnail":okm.G.THUMBNAIL_URL + l.feature.properties.contentdm_number,
+            "feature-row": full_title          
           });
           break;
         }
@@ -777,19 +798,30 @@ Modernizr.on("webp", function(support){
     onEachFeature: function (feature, layer) {
 
       if (feature.properties) {
-        var thumb_url = "http://dc.library.okstate.edu/utils/getthumbnail/collection/OKMaps/id/" + feature.properties.contentdm_number;
-        var ref_url = "http://dc.library.okstate.edu/cdm/ref/collection/OKMaps/id/"+ feature.properties.contentdm_number;
+        var img_url = okm.G.IMG_URL.replace("{{contentdm_number}}", feature.properties.contentdm_number)
+                        .replace("{{width}}", feature.properties.img_width/10)
+                        .replace("{{height}}", feature.properties.img_height/10)
+                        .replace("{{scale}}", 10);
+        var ref_url = okm.G.REF_URL + feature.properties.contentdm_number;
         var content = "<table class='table table-striped table-bordered table-condensed'>" +
-          "<tr><td>Title</td><td>" + feature.properties.title.replace("'","&#39;") + "</td></tr><tr><td>Thumbnail</td><td>"+
-          "<a target='_none' href='"+ref_url+"'><img alt= '"+feature.properties.title.replace("'","&#39;")+ "'src='"+
-          thumb_url+"'/></a></td></tr><tr><td>Link</td><td><a href='"+ ref_url+ "'>Click for Details</a></td></tr></table>";
+          "<tr><td>Title</td><td>" + feature.properties.title.replace("'","&#39;") + "</td></tr>"+
+          "<tr><td>Link</td><td><a href='"+ ref_url+ "'>"+ ref_url +"</a></td></tr>"+
+          "<tr><td>Thumbnail</td><td>"+
+          "<a target='_none' href='"+ ref_url+"'><div class='feature-modal-image-helper'><img class='img-responsive' alt= '" + 
+          feature.properties.title.replace("'","&#39;")+ "'src='"+
+          img_url+"'/></div></a></td></tr></table>";
 
         layer.on({
           click: function (e) {
             $("#feature-title").html(feature.properties.title);
+            $("#loading").show();
             $("#feature-info").html(content);
-            $("#featureModal").modal("show");
-            addToHighlight(feature);
+            $("#featureModal img").on("load",function(){
+              $("#loading").hide();
+              $("#featureModal").modal("show");
+              addToHighlight(feature);
+            });
+            
           }
         });
 
@@ -878,12 +910,25 @@ Modernizr.on("webp", function(support){
                    {data:["id"]}, 
                    {data:["bbox"]}, 
                    "feature-name", 
-                   "feature-sort-name"],
+                   "feature-sort-name",
+                   {name:"feature-thumbnail", attr:"src"},
+                   {name:"feature-row", attr:"title"}],
       item: "<tr class='feature-row'><td class='feature-name'>"+
         "</td><td class='feature-sort-name'>" + 
-        "</td></tr>"
-     // page:50
+        "</td><td><div class='thumbnail-background'><i class='thumbnail-loading fa fa-spin fa-circle-o-notch fa-2x'></i><span class='thumbnail-background-helper'></span>" +
+        "<img class='feature-thumbnail'/>"+
+        "</div></td</tr>"
      });
+
+    // Remove loading spinner when thumbnail loads
+    featureList.on("updated", function(){
+      $(".feature-thumbnail").load(function(e){
+        var sibs = $(this).siblings(); 
+        if (sibs.length > 0){
+          sibs[0].remove();
+        }
+      });
+    });
 
     map.addLayer(okm.map.layers.okmapsLayer);
     map.fire("moveend");
@@ -988,4 +1033,3 @@ $("input.photon-input").on("focusout", function(e){
 $("#featureModal").on("hidden.bs.modal", function (e) {
   $(document).on("mouseout", ".feature-row", clearHighlight);
 });
-
