@@ -11,10 +11,12 @@ input[type="radio"], input[type="checkbox"] {
 
 #sidebar {
   display: block;
-  width: 350px;
   height: 100%;
   max-width: 100%;
   float: left; }
+
+#sidebar, .panel-heading, .feature-row, .panel-body {
+  width: 350px; }
 
 #map {
   width: auto;
@@ -62,15 +64,8 @@ input[type="radio"], input[type="checkbox"] {
 .white {
   color: #FFFFFF; }
 
-.panel-heading {
-  width: 350px; }
-
-.panel-body {
-  width: 350px; }
-
 .feature-row {
-  cursor: pointer;
-  width: 350px; }
+  cursor: pointer; }
 
 .autosearch {
   padding-top: 8px; }
