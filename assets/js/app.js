@@ -71,13 +71,18 @@ okm.G.PER_PAGE = 10;
 okm.G.PAGE_NUMBER = 1;
 okm.G.QUERY_URL = "https://{username}.carto.com/api/v2/sql".replace("{username}", okm.G.CARTO_USER);
 okm.G.BASE_URL = "SELECT {fields} FROM {table_name}";
-okm.G.THUMBNAIL_URL = "http://dc.library.okstate.edu/utils/getthumbnail/collection/OKMaps/id/";
+okm.G.CDM_ROOT = "http://dc.library.okstate.edu";
+okm.G.REF_URL = okm.G.CDM_ROOT + "/cdm/ref/collection/OKMaps/id/";
+okm.G.IMG_URL = okm.G.CDM_ROOT + "/utils/ajaxhelper/?CISOROOT=OKMaps&CISOPTR={{contentdm_number}}&action=2&DMSCALE={{scale}}&DMWIDTH={{width}}&DMHEIGHT={{height}}&DMX=0&DMY=0&DMTEXT=&DMROTATE=0";
+okm.G.THUMBNAIL_URL = okm.G.CDM_ROOT + "/utils/getthumbnail/collection/OKMaps/id/";
 okm.G.TABLE_FIELDS = ["the_geom", 
   "title", 
   "cartodb_id", 
   "original_date",
   "contentdm_number",
   "collection",
+  "img_width",
+  "img_height",
   "size"];
 okm.G.CARTO_URL = okm.G.BASE_URL
     .replace("{table_name}", okm.G.TABLE_NAME)
@@ -205,6 +210,7 @@ $("#sidebar-hide-btn").click(function() {
 $("#filterModal").on("hide.bs.modal", function(){
   okm.sidebar.sync();
 });
+
 
 function addToHighlight(feature){
   okm.map.layers.highlight.clearLayers()
@@ -770,19 +776,30 @@ Modernizr.on("webp", function(support){
     onEachFeature: function (feature, layer) {
 
       if (feature.properties) {
-        var thumb_url = okm.G.THUMBNAIL_URL + feature.properties.contentdm_number;
-        var ref_url = "http://dc.library.okstate.edu/cdm/ref/collection/OKMaps/id/"+ feature.properties.contentdm_number;
+        var img_url = okm.G.IMG_URL.replace("{{contentdm_number}}", feature.properties.contentdm_number)
+                        .replace("{{width}}", feature.properties.img_width/10)
+                        .replace("{{height}}", feature.properties.img_height/10)
+                        .replace("{{scale}}", 10);
+        var ref_url = okm.G.REF_URL + feature.properties.contentdm_number;
         var content = "<table class='table table-striped table-bordered table-condensed'>" +
-          "<tr><td>Title</td><td>" + feature.properties.title.replace("'","&#39;") + "</td></tr><tr><td>Thumbnail</td><td>"+
-          "<a target='_none' href='"+ref_url+"'><img alt= '"+feature.properties.title.replace("'","&#39;")+ "'src='"+
-          thumb_url+"'/></a></td></tr><tr><td>Link</td><td><a href='"+ ref_url+ "'>Click for Details</a></td></tr></table>";
+          "<tr><td>Title</td><td>" + feature.properties.title.replace("'","&#39;") + "</td></tr>"+
+          "<tr><td>Link</td><td><a href='"+ ref_url+ "'>"+ ref_url +"</a></td></tr>"+
+          "<tr><td>Thumbnail</td><td>"+
+          "<a target='_none' href='"+ ref_url+"'><div class='feature-modal-image-helper'><img class='img-responsive' alt= '" + 
+          feature.properties.title.replace("'","&#39;")+ "'src='"+
+          img_url+"'/></div></a></td></tr></table>";
 
         layer.on({
           click: function (e) {
             $("#feature-title").html(feature.properties.title);
+            $("#loading").show();
             $("#feature-info").html(content);
-            $("#featureModal").modal("show");
-            addToHighlight(feature);
+            $("#featureModal img").on("load",function(){
+              $("#loading").hide();
+              $("#featureModal").modal("show");
+              addToHighlight(feature);
+            });
+            
           }
         });
 
@@ -876,8 +893,9 @@ Modernizr.on("webp", function(support){
                    {name:"feature-row", attr:"title"}],
       item: "<tr class='feature-row'><td class='feature-name'>"+
         "</td><td class='feature-sort-name'>" + 
-        "</td><td><div class='thumbnail-background'><img class='feature-thumbnail'/></div></td</tr>"
-     // page:50
+        "</td><td><div class='thumbnail-background'><span class='thumbnail-background-helper'></span>" +
+        "<img class='feature-thumbnail'/>"+
+        "</div></td</tr>"
      });
 
     map.addLayer(okm.map.layers.okmapsLayer);
@@ -983,4 +1001,3 @@ $("input.photon-input").on("focusout", function(e){
 $("#featureModal").on("hidden.bs.modal", function (e) {
   $(document).on("mouseout", ".feature-row", clearHighlight);
 });
-

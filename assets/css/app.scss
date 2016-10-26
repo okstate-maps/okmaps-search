@@ -36,6 +36,30 @@ input[type="radio"], input[type="checkbox"] {
 .thumbnail-background {
   width: 160px;
   height: 120px;
+  white-space: nowrap;
+  text-align: center;
+}
+
+.thumbnail-background-helper {
+  display: inline-block;
+  height: 100%;
+  vertical-align: middle;
+}
+
+img.feature-thumbnail {
+  /* z-index: 5;
+  position:absolute; */
+  background: $light-orange;
+  vertical-align: middle;
+  max-height: 120px;
+  max-width: 160px;
+}
+
+.thumbnail-loading {
+  position: relative;
+  z-index: 1;
+  left:20%;
+  top:45%;
 }
 .animated-icon{
   width: 20px;
@@ -85,12 +109,16 @@ input[type="radio"], input[type="checkbox"] {
   height: 100%;
   position: relative;
 }
+.feature-modal-image-helper{
+  
+}
 .sidebar-table {
   position: absolute;
   width: 100%;
   top: 125px;
   bottom: 45px;
-  overflow: auto;
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 .table>tbody>tr>td, .table>tbody>tr>th, 
 .table>tfoot>tr>td, .table>tfoot>tr>th, 
