@@ -90,6 +90,67 @@ okm.G.CARTO_URL = okm.G.BASE_URL
     .replace("{table_name}", okm.G.TABLE_NAME)
     .replace("{fields}", okm.G.TABLE_FIELDS.join(", "));
 
+okm.util.state_hash = {
+    'Alabama': 'AL',
+    'Alaska': 'AK',
+    'American Samoa': 'AS',
+    'Arizona': 'AZ',
+    'Arkansas': 'AR',
+    'California': 'CA',
+    'Colorado': 'CO',
+    'Connecticut': 'CT',
+    'Delaware': 'DE',
+    'District Of Columbia': 'DC',
+    'Federated States Of Micronesia': 'FM',
+    'Florida': 'FL',
+    'Georgia': 'GA',
+    'Guam': 'GU',
+    'Hawaii': 'HI',
+    'Idaho': 'ID',
+    'Illinois': 'IL',
+    'Indiana': 'IN',
+    'Iowa': 'IA',
+    'Kansas': 'KS',
+    'Kentucky': 'KY',
+    'Louisiana': 'LA',
+    'Maine': 'ME',
+    'Marshall Islands': 'MH',
+    'Maryland': 'MD',
+    'Massachusetts': 'MA',
+    'Michigan': 'MI',
+    'Minnesota': 'MN',
+    'Mississippi': 'MS',
+    'Missouri': 'MO',
+    'Montana': 'MT',
+    'Nebraska': 'NE',
+    'Nevada': 'NV',
+    'New Hampshire': 'NH',
+    'New Jersey': 'NJ',
+    'New Mexico': 'NM',
+    'New York': 'NY',
+    'North Carolina': 'NC',
+    'North Dakota': 'ND',
+    'Northern Mariana Islands': 'MP',
+    'Ohio': 'OH',
+    'Oklahoma': 'OK',
+    'Oregon': 'OR',
+    'Palau': 'PW',
+    'Pennsylvania': 'PA',
+    'Puerto Rico': 'PR',
+    'Rhode Island': 'RI',
+    'South Carolina': 'SC',
+    'South Dakota': 'SD',
+    'Tennessee': 'TN',
+    'Texas': 'TX',
+    'Utah': 'UT',
+    'Vermont': 'VT',
+    'Virgin Islands': 'VI',
+    'Virginia': 'VA',
+    'Washington': 'WA',
+    'West Virginia': 'WV',
+    'Wisconsin': 'WI',
+    'Wyoming': 'WY'
+  };
 
 //from http://stackoverflow.com/questions/1669190/javascript-min-max-array-values
 okm.util.array_min = function(arr) {
@@ -182,14 +243,16 @@ $("#sidebar-size-increase").click(function(){
   var current_width = +$("#sidebar").css("width").replace("px", "");
   var body_width = +$("body").css("width").replace("px", "");
   if (current_width < (body_width + 250)){
-    $("#sidebar,.panel-heading, .feature-row , .panel-body").css("width", (current_width + 250) + "px");
+    $("#sidebar,.panel-heading, .feature-row , .panel-body")
+      .css("width", (current_width + 250) + "px");
   }
 });
 
 $("#sidebar-size-decrease").click(function(){
   var current_width = +$("#sidebar").css("width").replace("px", "");
   if (current_width > 350){
-    $("#sidebar,.panel-heading, .feature-row , .panel-body").css("width", (current_width - 250) + "px");
+    $("#sidebar,.panel-heading, .feature-row , .panel-body")
+      .css("width", (current_width - 250) + "px");
   }
 });
 
@@ -432,6 +495,7 @@ function filterRankFeatures3(){
   var offset = (okm.G.PAGE_NUMBER - 1) * okm.G.PER_PAGE || 0;
   console.log("filterRankFeatures3");
   featuresTemp = [];
+  var cdb_ids = [];
   var f,fbbox,fcent,dist;
   var bbox = map.getBounds();
     
@@ -459,16 +523,20 @@ function filterRankFeatures3(){
           full_title = l.feature.properties.title;
           short_title = full_title.substr(0,50);
           short_title = full_title.length > 50 ? short_title.substr(0, Math.min(short_title.length, short_title.lastIndexOf(" "))) + "..." : full_title;
-          featuresTemp.push({
-            "cdm": l.feature.properties.contentdm_number,
-            "carto": l.feature.properties.cartodb_id,
-            "id": L.stamp(l),
-            "bbox": l.getBounds().toBBoxString(),
-            "feature-name": short_title,
-            "feature-sort-name":l.feature.properties.original_date,
-            "feature-thumbnail":okm.G.THUMBNAIL_URL + l.feature.properties.contentdm_number,
-            "feature-row": full_title          
-          });
+          
+          if (cdb_ids.indexOf(l.feature.properties.cartodb_id) === -1){
+             cdb_ids.push(l.feature.properties.cartodb_id);
+            featuresTemp.push({
+              "cdm": l.feature.properties.contentdm_number,
+              "carto": l.feature.properties.cartodb_id,
+              "id": L.stamp(l),
+              "bbox": l.getBounds().toBBoxString(),
+              "feature-name": short_title,
+              "feature-sort-name":l.feature.properties.original_date,
+              "feature-thumbnail":okm.G.THUMBNAIL_URL + l.feature.properties.contentdm_number,
+              "feature-row": full_title          
+            });
+          }
           break;
         }
       }
@@ -539,7 +607,10 @@ $("#more-results").click(function(e){
   okm.G.PAGE_NUMBER++;
   $("#loading").show();
   filterRankFeatures3(okm.map.layers.okmaps).then(function(){
+
+
       featureList.add(featuresTemp);
+
       $("#loading").hide();
     }, function(err){
       console.log(err);
@@ -850,6 +921,7 @@ Modernizr.on("webp", function(support){
           this.options = L.Util.extend(this.options, options);
 
           this.input = L.DomUtil.create('input', 'photon-input form-control empty', this.container);
+          this.input.title = "Zoom to a place by name";
           this.search = new L.PhotonSearch(map, this.input, this.options);
           this.search.on('blur', this.forwardEvent, this);
           this.search.on('focus', this.forwardEvent, this);
@@ -859,14 +931,45 @@ Modernizr.on("webp", function(support){
           this.search.on('ajax:return', this.forwardEvent, this);
           return this.container;
       }
-  });
+  }); 
 
   var searchControl = L.control.photon({
         onSelected: onSelectedHandler,
         resultsHandler: myHandler,
         placeholder: '',
         position: 'topright',
-        url: "https://photon.komoot.de/api/?"
+        url: "https://photon.komoot.de/api/?",
+        formatResult: function (feature, el) {
+          var title = L.DomUtil.create('strong', '', el),
+              detailsContainer = L.DomUtil.create('small', '', el),
+              details = [],
+              type = this.formatType(feature);
+          if (feature.properties.state && feature.properties.state !== feature.properties.name &&
+               feature.properties.country && feature.properties.country === "United States of America"){
+            title.innerHTML = feature.properties.name + ", " + okm.util.state_hash[feature.properties.state]; 
+          }
+
+          else if (feature.properties.state && feature.properties.state !== feature.properties.name &&
+               feature.properties.country && feature.properties.country!== "United States of America"){
+             title.innerHTML = feature.properties.name + ", " + feature.properties.state; 
+          }
+
+          else {
+            title.innerHTML = feature.properties.name;
+          }
+
+          
+          if (type) {
+            details.push(type);
+          }
+          if (feature.properties.city && feature.properties.city !== feature.properties.name) {
+              details.push(feature.properties.city);
+          }
+          if (feature.properties.country) {
+            details.push(feature.properties.country);
+          } 
+          detailsContainer.innerHTML = details.join(', ');
+        }
     });
 
   /* Layer control listeners that allow for a single markerClusters layer */
@@ -925,7 +1028,7 @@ Modernizr.on("webp", function(support){
       $(".feature-thumbnail").load(function(e){
         var sibs = $(this).siblings(); 
         if (sibs.length > 0){
-          sibs[0].remove();
+          $(sibs[0]).remove();
         }
       });
     });

@@ -266,10 +266,14 @@ div.leaflet-photon input.photon-input{
 
 .photon-input{
   width:34px;
-  background-image: url(../img/geocoder.png);
+  background-image: url(../img/mapsigns.png);
   background-position: center;
   background-repeat: no-repeat;
+  cursor: pointer;
+}
 
+.photon-autocomplete li.on {
+    background-color: $light-orange;
 }
 
 /*
