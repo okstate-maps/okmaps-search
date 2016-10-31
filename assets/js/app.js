@@ -225,6 +225,11 @@ $("#about-btn").click(function() {
   return false;
 });
 
+$("#help-btn").click(function() {
+  introJs().setOption("showStepNumbers", false).start();
+   $(".navbar-collapse.in").collapse("hide");
+  return false;
+});
 
 $("#filter-options").click(function(){
   $("#filterModal").modal("show");
@@ -643,7 +648,13 @@ $("#more-results").click(function(e){
         //   page:50
         // });
         featureList.clear();
-        featureList.add(featuresTemp);
+        if (featuresTemp.length > 0){
+          $("#no-results-found").hide();
+          featureList.add(featuresTemp);
+        }
+        else {
+          $("#no-results-found").show();
+        }
         $(".sidebar-table").scrollTop(0);
         
 
@@ -875,12 +886,12 @@ Modernizr.on("webp", function(support){
                         .replace("{{scale}}", 10);
         var ref_url = okm.G.REF_URL + feature.properties.contentdm_number;
         var content = "<table class='table table-striped table-bordered table-condensed'>" +
-          "<tr><td>Title</td><td>" + feature.properties.title.replace("'","&#39;") + "</td></tr>"+
-          "<tr><td>Link</td><td><a href='"+ ref_url+ "'>"+ ref_url +"</a></td></tr>"+
-          "<tr><td>Thumbnail</td><td>"+
-          "<a target='_none' href='"+ ref_url+"'><div class='feature-modal-image-helper'><img class='img-responsive' alt= '" + 
+          "<tr><td>" + feature.properties.title.replace("'","&#39;") + "</td></tr>"+
+          "<tr><td><a href='"+ ref_url+ "'>"+ ref_url +"</a></td></tr>"+
+          "<tr><td>"+
+          "<div class='feature-modal-image-helper'><a target='_none' href='"+ ref_url+"'><img class='feature-img img-responsive' alt= '" + 
           feature.properties.title.replace("'","&#39;")+ "'src='"+
-          img_url+"'/></div></a></td></tr></table>";
+          img_url+"'/></a></div></td></tr></table>";
 
         layer.on({
           click: function (e) {
@@ -927,7 +938,7 @@ Modernizr.on("webp", function(support){
           this.search.on('focus', this.forwardEvent, this);
           this.search.on('hide', this.forwardEvent, this);
           this.search.on('selected', this.forwardEvent, this);
-          this.search.on('ajax:send', this.forwardEvent, this);
+          this.search.on('ajax:send', this.forwokardEvent, this);
           this.search.on('ajax:return', this.forwardEvent, this);
           return this.container;
       }
