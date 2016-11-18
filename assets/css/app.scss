@@ -33,6 +33,7 @@ input[type="radio"], input[type="checkbox"] {
   width: auto;
   height: 100%;
   box-shadow: 0 0 10px rgba(0,0,0,0.5);
+  z-index: 2; //seems to be necessary for proper display of right side of sidebar in IE and MS Edge ¯\_(ツ)_/¯
 }
 
 .thumbnail-background {
@@ -117,12 +118,30 @@ input[type="radio"], input[type="checkbox"] {
 #no-results-found{
   display: none;
 }
+
+.padded-multiline { 
+  line-height: 1.3; 
+  padding: 2px 0; 
+  border-left: 20px solid white;
+  margin: 20px auto;
+}
+.padded-multiline div { 
+  padding: 4px 0;
+  display: inline;
+  margin: 0; 
+}
+.padded-multiline div span { 
+  position: relative;
+  left: -10px; 
+}
+
 .sidebar-table {
   position: absolute;
+  z-index: 1; //seems to be necessary for proper display of right side of sidebar in IE and MS Edge ¯\_(ツ)_/¯
   width: 100%;
   top: 125px;
   bottom: 45px;
-  overflow-y: auto;
+  overflow-y: scroll;
   overflow-x: hidden;
 }
 .table>tbody>tr>td, .table>tbody>tr>th, 
@@ -288,6 +307,10 @@ div.leaflet-photon input.photon-input{
   background-position: center;
   background-repeat: no-repeat;
   cursor: pointer;
+}
+
+.photon-autocomplete {
+  padding-left: 0px;
 }
 
 .photon-autocomplete li.on {

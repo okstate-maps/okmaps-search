@@ -88,7 +88,7 @@
             <div class="panel-body">
               <div class="row">
                 <div class="col-xs-8 col-md-8">
-                  <div class="input-group">
+                  <div class="input-group" data-step="2" data-intro="Or search by text.">
                     <span class="input-group-btn">
                       <button class="btn btn-default" type="button" onclick="okm.text_search.click()"><i class="fa fa-search"></i></button>
                     </span>
@@ -96,14 +96,14 @@
                   </div>
                 </div>
                 <div class="col-xs-4 col-md-4">
-                    <button class="btn btn-default" id="filter-options" title="Filter search results">
+                    <button data-step="5" data-intro="Click here for filter options." class="btn btn-default" id="filter-options" title="Filter search results">
                       <span class="fa fa-filter">&nbsp;Filter</span>
                     </button>
                 </div>
              <!--  <div class="row"> -->
                 <div class="col-xs-12 col-md-12">
-                  <div class="autosearch">
-                    <label for="search-on-map-move"> Update results when I move the map</label>
+                  <div class="autosearch" data-step="4" data-intro="Uncheck this to prevent results from changing when you move the map.">
+                    <label for="search-on-map-move"> Redo search when I move the map</label>
                     <input  id="search-on-map-move" checked type="checkbox"/> 
                   </div>
                 </div>
@@ -112,8 +112,12 @@
                
             </div>
             <div class="sidebar-table">
-            <span id="no-results-found">No results found. Zoom out and/or change any filters.</span>
-              <table class="table table-striped table-hover" data-step="2" data-intro="Results show up here." data-position="right" id="feature-list">
+            <div id="no-results-found" class="padded-multiline">
+              <div>
+                 <span >No results found. Zoom out and/or change any filters.</span>
+              </div>
+            </div>
+              <table class="table table-striped table-hover" data-step="3" data-intro="Results show up here." data-position="right" id="feature-list">
                 <thead class="hidden">
                   <tr>
                     <th>Icon</th>
@@ -134,7 +138,7 @@
           </div>
         </div>
       </div>
-      <div id="map" data-step="1" data-intro="Use the map to zoom to the area that you are interested in maps of." data-position='auto' ></div>
+      <div id="map" data-step="1" data-intro="Use the map to zoom to the area that want to see maps of." data-position='auto' ></div>
     </div>
     <div id="loading">
       <i class="fa fa-circle-o-notch fa-spin fa-3x fa-fw margin-bottom"></i>
