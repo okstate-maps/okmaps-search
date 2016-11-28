@@ -94,9 +94,9 @@ okm.text_search.base_query = "select cartodb_id  from ("+
   "(setweight(to_tsvector('english', title),'A')"+
   ") as document "+
   "from {{table_name}}  ) as doc "+
-  "where doc.document @@ to_tsquery('english','{{search_text}}') "+
+  "where doc.document @@ plainto_tsquery('english','{{search_text}}') "+
   "order by "+
-  "ts_rank(doc.document, to_tsquery('english','{{search_text}}'), 1) DESC " +
+  "ts_rank(doc.document, plainto_tsquery('english','{{search_text}}'), 1) DESC " +
   "LIMIT {{per_page}} OFFSET {{offset}}";
 
 okm.map = {};

@@ -274,8 +274,18 @@ input[type="radio"], input[type="checkbox"] {
     padding:5%;
 }
 
+/*
+Bigger Zoom in/out buttons
+*/
+.leaflet-bar a, .leaflet-bar a:hover {
+  width: 36px;
+  height: 36px;  
+  line-height: 36px;
+}
 
-
+.leaflet-control-zoom-in, .leaflet-control-zoom-out {
+  font-size: 24px;
+}
 /*
 Geolocation
 */
@@ -284,12 +294,18 @@ Geolocation
   color: $orange;
 }
 
+.leaflet-control-locate a {
+  font-size: 1.9em;
+}
+
 /*
 Geocoder
 */
 
 div.leaflet-photon{
   box-shadow: 0 1px 5px rgba(0,0,0,0.4);
+  background: #fff;
+  border-radius: 5px;
 }
 div.leaflet-photon input.photon-input{
   border:none;
@@ -298,11 +314,12 @@ div.leaflet-photon input.photon-input{
     max-width: 300px;
     transition:width 0.5s;
     background-image: none;
+    cursor: text;
 
 }
 
 .photon-input{
-  width:34px;
+  width:36px;
   background-image: url(../img/mapsigns.png);
   background-position: center;
   background-repeat: no-repeat;
