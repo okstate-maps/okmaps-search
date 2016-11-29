@@ -245,7 +245,7 @@ $(window).resize(function() {
 });
 
 $(document).on("click", ".feature-row", function(e) {
-  $(document).off("mouseout", ".feature-row", clearHighlight);
+  //$(document).off("mouseout", ".feature-row", okm.map.clearHighlight);
   sidebarClick(parseInt($(this).data("id"), 10));
 });
 
@@ -258,7 +258,12 @@ if ( !("ontouchstart" in window) ) {
   });
 }
 
-$(document).on("mouseout", ".feature-row", clearHighlight);
+
+okm.map.clearHighlight = function() {
+  okm.map.layers.highlight.clearLayers();
+};
+
+$(document).on("mouseout", ".feature-row", okm.map.clearHighlight);
 
 $("#about-btn").click(function() {
   $("#aboutModal").modal("show");
@@ -332,6 +337,10 @@ $("#sidebar-toggle-btn").click(function() {
 $("#sidebar-hide-btn").click(function() {
   animateSidebar();
   return false;
+});
+
+$("#featureModal").on("hide.bs.modal", function(){
+  okm.map.clearHighlight();
 });
 
 $("#filterModal").on("hide.bs.modal", function(){
@@ -508,9 +517,6 @@ function sizeLayerControl() {
   $(".leaflet-control-layers").css("max-height", $("#map").height() - 50);
 }
 
-function clearHighlight() {
-  okm.map.layers.highlight.clearLayers();
-}
 
 function sidebarClick(id) {
   var layer = okm.map.layers.okmaps.getLayer(id);
@@ -870,19 +876,7 @@ function updateAttribution(e) {
   });
 }
 
-Modernizr.on("webp", function(support){
-
-  var tile_format;
-  //need the toString bit due to Modernizr bug.
-  //https://github.com/Modernizr/Modernizr/issues/1765
-  //fixed but not yet released
-  if (support.toString() === "true"){ 
-    tile_format = "webp";
-  }
-  else {
-    tile_format = "jpg";
-  }
-
+/*
   okm.map.layers.street = L.tileLayer("https://{s}.tiles.mapbox.com/v4/mapbox.streets/{z}/{x}/{y}.{{tf}}?access_token={{token}}".replace("{{tf}}",tile_format).replace("{{token}}",okm.G.MB_TOKEN), {
     maxZoom: 19,
     detectRetina: true,
@@ -892,6 +886,18 @@ Modernizr.on("webp", function(support){
      maxZoom: 19,
     detectRetina: true,
    attribution: "&copy; Mapbox"
+  });*/
+  okm.map.layers.street = L.tileLayer("https://api.mapbox.com/styles/v1/mapbox/streets-v9/tiles/{z}/{x}/{y}{{retina}}?access_token={{token}}".replace("{{retina}}", L.Browser.retina ? "@2x" : "").replace("{{token}}",okm.G.MB_TOKEN), {
+    maxZoom: 19,
+    tileSize: 512,
+    zoomOffset: -1,
+    attribution: "&copy; Mapbox"
+  });
+  okm.map.layers.satellite = L.tileLayer("https://api.mapbox.com/styles/v1/mapbox/satellite-streets-v10/tiles/{z}/{x}/{y}{{retina}}?access_token={{token}}".replace("{{retina}}", L.Browser.retina ? "@2x" : "").replace("{{token}}",okm.G.MB_TOKEN), {
+    maxZoom: 19,
+    tileSize: 512,
+    zoomOffset: -1,
+    attribution: "&copy; Mapbox"
   });
 
   /* Overlay Layers */
@@ -966,7 +972,7 @@ Modernizr.on("webp", function(support){
       onAdd: function (map, options) {
           this.map = map;
           this.container = L.DomUtil.create('div', 'leaflet-photon');
-
+          this.icon = L.DomUtil.create('i','fa fa-2x fa-map-signs photon-icon' , this.container);
           this.options = L.Util.extend(this.options, options);
 
           this.input = L.DomUtil.create('input', 'photon-input form-control empty', this.container);
@@ -1162,6 +1168,15 @@ Modernizr.on("webp", function(support){
 
   searchControl.addTo(map);
 
+  $(".photon-icon").click(function(e){
+    $(this).css("display", "none");
+    $("input.photon-input").css("display","inline-block").focus();
+  });
+  
+  $("input.photon-input").focusout(function(e){
+    $(this).css("display", "none");
+    $(".photon-icon").css("display","inline-block");
+  });
   // Leaflet patch to make layer control scrollable on touch browsers
   var container = $(".leaflet-control-layers")[0];
   if (!L.Browser.touch) {
@@ -1172,12 +1187,7 @@ Modernizr.on("webp", function(support){
     L.DomEvent.disableClickPropagation(container);
   }
 
-});
 
-$("input.photon-input").on("focusout", function(e){
-  $(this).val("");
-});
 
-$("#featureModal").on("hidden.bs.modal", function (e) {
-  $(document).on("mouseout", ".feature-row", clearHighlight);
-});
+
+

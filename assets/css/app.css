@@ -237,6 +237,9 @@ input[type="radio"], input[type="checkbox"] {
 .leaflet-timeline-controls button {
   padding: 5%; }
 
+.leaflet-control-layers {
+  border-radius: 4px; }
+
 /*
 Bigger Zoom in/out buttons
 */
@@ -248,6 +251,14 @@ Bigger Zoom in/out buttons
 .leaflet-control-zoom-in, .leaflet-control-zoom-out {
   font-size: 24px; }
 
+.leaflet-touch .leaflet-bar a, .leaflet-touch .leaflet-bar a:hover {
+  width: 44px;
+  height: 44px;
+  line-height: 44px; }
+
+.leaflet-touch .leaflet-control-zoom-in, .leaflet-control-zoom-out {
+  font-size: 38px; }
+
 /*
 Geolocation
 */
@@ -255,31 +266,49 @@ Geolocation
   color: #FF7300; }
 
 .leaflet-control-locate a {
-  font-size: 1.9em; }
+  font-size: 1.6em; }
+
+.leaflet-touch .leaflet-control-locate a {
+  font-size: 2em; }
 
 /*
 Geocoder
 */
 div.leaflet-photon {
-  box-shadow: 0 1px 5px rgba(0, 0, 0, 0.4);
   background: #fff;
-  border-radius: 5px; }
+  border-radius: 4px;
+  box-shadow: 0 1px 5px rgba(0, 0, 0, 0.4); }
+
+.leaflet-touch div.leaflet-photon {
+  background-clip: padding-box;
+  border: 2px solid rgba(0, 0, 0, 0.2); }
 
 div.leaflet-photon input.photon-input {
   border: none; }
 
-.photon-input:focus {
+input.photon-input {
+  display: none; }
+
+.photon-icon {
+  text-align: center; }
+
+input.photon-input, .photon-icon {
+  height: 36px;
+  width: 36px;
+  line-height: 36px;
+  cursor: pointer; }
+
+.leaflet-touch input.photon-input, .leaflet-touch .photon-icon {
+  width: 44px;
+  height: 44px;
+  line-height: 44px; }
+
+input.photon-input:active, input.photon-input:focus {
   max-width: 300px;
+  width: 400px;
   transition: width 0.5s;
   background-image: none;
   cursor: text; }
-
-.photon-input {
-  width: 36px;
-  background-image: url(../img/mapsigns.png);
-  background-position: center;
-  background-repeat: no-repeat;
-  cursor: pointer; }
 
 .photon-autocomplete {
   padding-left: 0px; }
