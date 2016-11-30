@@ -353,6 +353,9 @@ $("#input_text_search").on("keypress",function(e){
   if (e.which === 13 && this.value !== ""){
     okm.text_search.click();
   }
+  else {
+    okm.G.PAGE_NUMBER = 1;
+  }
 });
 
 
@@ -728,7 +731,7 @@ okm.sidebar.add_results = function(){
     $("#no-results-found").hide();
     featureList.add(featuresTemp);
   }
-  else {
+  else if ($("tr.feature-row").length === 0){
     $("#no-results-found").show();
   }
 };
