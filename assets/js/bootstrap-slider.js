@@ -1379,7 +1379,10 @@ var windowIsDefined = (typeof window === "undefined" ? "undefined" : _typeof(win
 				this._layout();
 
 				if (this.touchCapable) {
-					if (window.navigator.msPointerEnabled) {
+					if (window.navigator.pointerEnabled) {
+						document.removeEventListener("pointerup", this.mouseup, false);
+						document.removeEventListener("pointermove", this.mousemove, false);
+					} else if (window.navigator.msPointerEnabled) {
 						document.removeEventListener("MSPointerUp", this.mouseup, false);
 						document.removeEventListener("MSPointerMove", this.mousemove, false);
 					} else {
@@ -1400,7 +1403,10 @@ var windowIsDefined = (typeof window === "undefined" ? "undefined" : _typeof(win
 
 				if (this.touchCapable) {
 					// Touch: Bind touch events:
-					if (window.navigator.msPointerEnabled) {
+					if (window.navigator.pointerEnabled) {
+						document.addEventListener("pointerup", this.mouseup, false);
+						document.addEventListener("pointermove", this.mousemove, false);
+					} else if (window.navigator.msPointerEnabled) {
 						document.addEventListener("MSPointerUp", this.mouseup, false);
 						document.addEventListener("MSPointerMove", this.mousemove, false);
 					} else {
@@ -1561,7 +1567,10 @@ var windowIsDefined = (typeof window === "undefined" ? "undefined" : _typeof(win
 				}
 				if (this.touchCapable) {
 					// Touch: Unbind touch event handlers:
-					if (window.navigator.msPointerEnabled) {
+					if (window.navigator.pointerEnabled) {
+						document.removeEventListener("pointerUp", this.mouseup, false);
+						document.removeEventListener("pointerMove", this.mousemove, false);
+					} else if (window.navigator.msPointerEnabled) {
 						document.removeEventListener("MSPointerUp", this.mouseup, false);
 						document.removeEventListener("MSPointerMove", this.mousemove, false);
 					} else {
