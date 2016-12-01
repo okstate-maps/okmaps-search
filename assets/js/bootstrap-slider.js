@@ -579,7 +579,7 @@ var windowIsDefined = (typeof window === "undefined" ? "undefined" : _typeof(win
 			this.eventToCallbackMap = {};
 			this.sliderElem.id = this.options.id;
 
-			this.touchCapable = 'ontouchstart' in window || window.DocumentTouch && document instanceof window.DocumentTouch;
+			this.touchCapable = 'ontouchstart' in window || 'pointerEnabled' in window.navigator || 'msPointerEnabled' in window.navigator || window.DocumentTouch && document instanceof window.DocumentTouch;
 
 			this.touchX = 0;
 			this.touchY = 0;
