@@ -4,7 +4,7 @@ $light-orange: #FF9900;
 $silver: #BEBEBE;
 $black: #000;
 $gray: #f5f5f5;
-
+$sidebar-footer-height: 60px;
 
 html, body, #container {
   height: 100%;
@@ -140,7 +140,7 @@ input[type="radio"], input[type="checkbox"] {
   z-index: 1; //seems to be necessary for proper display of right side of sidebar in IE and MS Edge ¯\_(ツ)_/¯
   width: 100%;
   top: 125px;
-  bottom: 45px;
+  bottom: $sidebar-footer-height;
   overflow-y: scroll;
   overflow-x: hidden;
 }
@@ -164,7 +164,7 @@ input[type="radio"], input[type="checkbox"] {
 }
 
 .sidebar-footer {
-  height:45px;
+  height:$sidebar-footer-height;
   width:100%;
   position:absolute;
   bottom:0px;
@@ -179,7 +179,9 @@ input[type="radio"], input[type="checkbox"] {
   position:relative;
   width:80%;
   left:10%;
-  margin-top:5px;
+  margin-top: 7px;
+  margin-bottom: 7px;
+  height: $sidebar-footer-height - 14px;
 }
 
 .sidebar-footer button:hover {
@@ -297,7 +299,7 @@ Bigger Zoom in/out buttons
   line-height: 44px;
 }
 
-.leaflet-touch .leaflet-control-zoom-in, .leaflet-control-zoom-out {
+.leaflet-touch .leaflet-control-zoom-in, .leaflet-touch .leaflet-control-zoom-out {
   font-size: 38px;
 }
 
@@ -316,6 +318,10 @@ Geolocation
 
 .leaflet-touch .leaflet-control-locate a {
   font-size: 2em;
+}
+
+.leaflet-control-locate a {
+  color: black;
 }
 
 

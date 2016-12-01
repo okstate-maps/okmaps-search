@@ -512,7 +512,7 @@ function animateSidebar() {
   $("#sidebar").animate({
     width: "toggle"
   }, 350, function() {
-    map.invalidateSize();
+    map.invalidateSize({pan:false});
   });
 }
 
@@ -528,7 +528,7 @@ function sidebarClick(id) {
   /* Hide sidebar and go to the map on small screens */
   if (document.body.clientWidth <= 767) {
     $("#sidebar").hide();
-    map.invalidateSize();
+    map.invalidateSize({pan:false});
   }
 }
 
@@ -1181,8 +1181,8 @@ function updateAttribution(e) {
     $(".photon-icon").css("display","inline-block");
   });
   // Leaflet patch to make layer control scrollable on touch browsers
-  var container = $(".leaflet-control-layers")[0];
-  if (!L.Browser.touch) {
+  /*var container = $(".leaflet-control-layers")[0];*/
+/*  if (!L.Browser.touch) {
     L.DomEvent
     .disableClickPropagation(container)
     .disableScrollPropagation(container);
@@ -1192,5 +1192,5 @@ function updateAttribution(e) {
 
 
 
-
+*/
 
