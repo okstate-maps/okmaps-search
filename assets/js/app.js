@@ -48,9 +48,12 @@ if (!Object.keys) {
 
 window.scrollTo(0,1);
 
-var map, featureList, tree, tree_nodes = [],
- boroughSearch = [], okmapsSearch = [], museumSearch = [], 
- timeline_added = false, featuresTemp = [];
+var map, 
+ featureList,
+ okmapsSearch = [], 
+ timeline_added = false, 
+ featuresTemp = [];
+
 var okm = {};
 okm.G = {};
 okm.state = {};
@@ -245,8 +248,8 @@ $(window).resize(function() {
 });
 
 $(document).on("click", ".feature-row", function(e) {
-  //$(document).off("mouseout", ".feature-row", okm.map.clearHighlight);
-  sidebarClick(parseInt($(this).data("id"), 10));
+ 
+  okm.sidebar.click(parseInt($(this).data("id"), 10));
 });
 
 if ( !("ontouchstart" in window) ) {
@@ -521,16 +524,15 @@ function sizeLayerControl() {
 }
 
 
-function sidebarClick(id) {
+okm.sidebar.click = function(id) {
   var layer = okm.map.layers.okmaps.getLayer(id);
-  //map.fitBounds(layer.getBounds());
   layer.fire("click");
   /* Hide sidebar and go to the map on small screens */
   if (document.body.clientWidth <= 767) {
     $("#sidebar").hide();
     map.invalidateSize({pan:false});
   }
-}
+};
 
 okm.util.bboxStringToLatLngBounds = function(bbox_str){
   var a = bbox_str.split(",");

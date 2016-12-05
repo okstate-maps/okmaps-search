@@ -579,7 +579,7 @@ var windowIsDefined = (typeof window === "undefined" ? "undefined" : _typeof(win
 			this.eventToCallbackMap = {};
 			this.sliderElem.id = this.options.id;
 
-			this.touchCapable = 'ontouchstart' in window || 'pointerEnabled' in window.navigator || 'msPointerEnabled' in window.navigator || window.DocumentTouch && document instanceof window.DocumentTouch;
+			this.touchCapable = 'ontouchstart' in window || 'pointerEnabled' in navigator || 'msPointerEnabled' in navigator || window.DocumentTouch && document instanceof window.DocumentTouch;
 
 			this.touchX = 0;
 			this.touchY = 0;
@@ -718,11 +718,22 @@ var windowIsDefined = (typeof window === "undefined" ? "undefined" : _typeof(win
 			this.touchmove = this._touchmove.bind(this);
 
 			if (this.touchCapable) {
-				// Bind touch handlers
-				this.sliderElem.addEventListener("touchstart", this.touchstart, false);
-				this.sliderElem.addEventListener("touchmove", this.touchmove, false);
+
+				// Bind touch handlers				
+				if (window.navigator.pointerEnabled) {
+					this.sliderElem.addEventListener("pointerup", this.mouseup, false);
+					this.sliderElem.addEventListener("pointermove", this.mousemove, false);
+				} else if (window.navigator.msPointerEnabled) {
+					this.sliderElem.addEventListener("MSPointerUp", this.mouseup, false);
+					this.sliderElem.addEventListener("MSPointerMove", this.mousemove, false);
+				} else {
+					this.sliderElem.addEventListener("touchstart", this.touchstart, false);
+					this.sliderElem.addEventListener("touchmove", this.touchmove, false);
+				}
 			}
 			this.sliderElem.addEventListener("mousedown", this.mousedown, false);
+			this.sliderElem.addEventListener("pointermove", this.mousemove, false);
+			this.sliderElem.addEventListener("pointerdown", this.mousedown, false);
 
 			// Bind window handlers
 			this.resize = this._resize.bind(this);
@@ -1360,7 +1371,6 @@ var windowIsDefined = (typeof window === "undefined" ? "undefined" : _typeof(win
 				if (!this._state.enabled) {
 					return false;
 				}
-
 				this._state.offset = this._offset(this.sliderElem);
 				this._state.size = this.sliderElem[this.sizePos];
 
@@ -1530,7 +1540,6 @@ var windowIsDefined = (typeof window === "undefined" ? "undefined" : _typeof(win
 				if (ev.changedTouches === undefined) {
 					return;
 				}
-
 				var touch = ev.changedTouches[0];
 
 				var xDiff = touch.pageX - this.touchX;
@@ -1568,8 +1577,8 @@ var windowIsDefined = (typeof window === "undefined" ? "undefined" : _typeof(win
 				if (this.touchCapable) {
 					// Touch: Unbind touch event handlers:
 					if (window.navigator.pointerEnabled) {
-						document.removeEventListener("pointerUp", this.mouseup, false);
-						document.removeEventListener("pointerMove", this.mousemove, false);
+						document.removeEventListener("pointerup", this.mouseup, false);
+						document.removeEventListener("pointermove", this.mousemove, false);
 					} else if (window.navigator.msPointerEnabled) {
 						document.removeEventListener("MSPointerUp", this.mouseup, false);
 						document.removeEventListener("MSPointerMove", this.mousemove, false);

@@ -41,6 +41,7 @@
   vertical-align: middle;
   position: relative;
   -ms-touch-action: none;
+  touch-action: none;
 }
 .slider.slider-horizontal {
   width: 210px;
