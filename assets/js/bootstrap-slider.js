@@ -732,8 +732,6 @@ var windowIsDefined = (typeof window === "undefined" ? "undefined" : _typeof(win
 				}
 			}
 			this.sliderElem.addEventListener("mousedown", this.mousedown, false);
-			this.sliderElem.addEventListener("pointermove", this.mousemove, false);
-			this.sliderElem.addEventListener("pointerdown", this.mousedown, false);
 
 			// Bind window handlers
 			this.resize = this._resize.bind(this);
