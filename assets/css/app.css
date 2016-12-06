@@ -46,6 +46,9 @@ input[type="radio"], input[type="checkbox"] {
   max-height: 120px;
   max-width: 160px; }
 
+#feature-info a {
+  word-break: break-all; }
+
 .feature-img {
   margin: 0 auto; }
 
@@ -332,7 +335,8 @@ Slider (for year filtering)
   width: 80%;
   min-width: 210px;
   margin-top: 40px;
-  margin-left: 10%; }
+  margin-left: 10%;
+  margin-bottom: 20px; }
 
 /*
 Typeahead (not used currently)
