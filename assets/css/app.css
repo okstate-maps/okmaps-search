@@ -126,7 +126,7 @@ input[type="radio"], input[type="checkbox"] {
   z-index: 1;
   width: 100%;
   top: 125px;
-  bottom: 60px;
+  bottom: 0;
   overflow-y: scroll;
   overflow-x: hidden; }
 

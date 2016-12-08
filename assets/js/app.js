@@ -63,32 +63,81 @@ okm.sidebar = {};
 okm.filter = {};
 //criteria obj keys must correspond to table fields
 okm.filter.criteria = {};
-okm.filter.filter_rank_query = "SELECT cartodb_id, sort_order from ((" + 
-    //first set of results is those whose bbox is entirely contained
-    //within the viewport, sorted by area from largest to smallest
-    "SELECT 1 as sort_order, cartodb_id FROM {{table_name}} as b1 WHERE" +
-      " ST_GeomFromText('{{bbox_wkt}}', 4326) ~ the_geom {{nonspatial_filters}} " + 
-      "ORDER BY st_area(the_geom) DESC)" +
-    " UNION ALL (" + 
 
-    //second set is those bboxes with centroids falling within the viewport
-    //sorted by distance between
-    "SELECT 2 as sort_order, cartodb_id FROM {{table_name}} WHERE" +
-      " ST_Centroid(the_geom) @ ST_GeomFromText('{{bbox_wkt}}'" + 
-      ", 4326) {{nonspatial_filters}}" +
-      " ORDER BY ST_Centroid(the_geom) <#> ST_GeomFromText('" + 
-      "{{bbox_wkt}}" + "', 4326))" +
+//how to rank search results gets handled in this thing
+okm.filter.filter_rank_query = "SELECT cartodb_id, sort_order from " + //parent wrapper
 
-    // Uncomment the following lines to include a third tier of results,
-    // those whose bounding box intersects the viewport in *any* way
+"(" + //parent
+    
+   "(" + //1st clause
+
+        //experiment 2: return maps very close in area (but can be larger than viewport)
+          "SELECT 1 as sort_order, cartodb_id FROM {{table_name}} as c1 WHERE" +
+          " ST_GeomFromText('{{bbox_wkt}}', 4326) && ST_Centroid(the_geom)" +
+          " AND " +
+          "(" + 
+            "abs( 1 - (area / " + 
+            " ST_Area(ST_Transform(ST_GeomFromText('{{bbox_wkt}}', 4326), 3857)))) < 0.4" + 
+          ")" + 
+          " {{nonspatial_filters}}" + 
+          " ORDER BY ST_Centroid(ST_Transform(ST_GeomFromText('{{bbox_wkt}}', 4326), 3857)) <-> ST_Centroid(the_geom_webmercator) ASC" +
+    
+   " )" + //end 1st
+
+  " UNION ALL "+
+    
+  " ( " + //2nd clause
+
+        //first set of results is those whose bbox is entirely contained
+        // within the viewport, sorted by area from largest to smallest
+          " SELECT 2 as sort_order, cartodb_id FROM {{table_name}} as c2 WHERE" +
+          " ST_GeomFromText('{{bbox_wkt}}', 4326) ~ the_geom {{nonspatial_filters}}" + 
+          " ORDER BY " + 
+          " area DESC " +
+          " , " +
+          " ST_Centroid(ST_Transform(ST_GeomFromText('{{bbox_wkt}}', 4326), 3857)) <-> ST_Centroid(the_geom_webmercator) ASC " +
+
+  " )" + //end 2nd
+
+  " UNION ALL "+
+    
+  " ( " + //3rd clause
+  
+    // The Catch-All: returns maps whose bounding box intersects the viewport in *any* way
+    // and order by distance from center
+    "SELECT 3 as sort_order, cartodb_id FROM {{table_name}} as c3 WHERE" +
+      " ST_GeomFromText('" + 
+      "{{bbox_wkt}}" + "', 4326) && the_geom " + 
+      "{{nonspatial_filters}}" +
+      " ORDER BY " +
+      " ST_Centroid(ST_Transform(ST_GeomFromText('{{bbox_wkt}}', 4326), 3857)) <-> ST_Centroid(the_geom_webmercator) ASC " +
+
+  " )" + //end 3rd
+
+")" + //end parent
+
+" as foobar LIMIT {{per_page}} OFFSET {{offset}}";
+
     // " UNION ALL (" + 
-    // "SELECT 3 as sort_order, cartodb_id FROM {{table_name}} WHERE" +
-    //   " ST_GeomFromText('" + 
-    //   "{{bbox_wkt}}" + "', 4326) && the_geom " + "{{nonspatial_filters}}" +
-    //   " ORDER BY the_geom <<->> ST_GeomFromText('" + 
-    //   "{{bbox_wkt}}" + "', 4326))" + 
 
-      ") as foobar LIMIT {{per_page}} OFFSET {{offset}}";
+//previous iterations
+    //bboxes with centroids falling within the viewport sorted by distance between
+    // "SELECT 2 as sort_order, cartodb_id FROM {{table_name}} WHERE" +
+    //   " ST_Centroid(the_geom) @ ST_GeomFromText('{{bbox_wkt}}'" + 
+    //   ", 4326) {{nonspatial_filters}}" +
+    //   " ORDER BY ST_Centroid(the_geom) <#> ST_GeomFromText('" + 
+    //   "{{bbox_wkt}}" + "', 4326))" +
+
+
+
+      //experiment: cut out very small maps from results of those contained by viewport
+      // "SELECT 1 as sort_order, cartodb_id FROM {{table_name}} as b1 WHERE" +
+      // " ST_GeomFromText('{{bbox_wkt}}', 4326) ~ the_geom" + 
+      // " AND" +
+      // " ( area / " + 
+      // " ST_Area(ST_Transform(ST_GeomFromText('{{bbox_wkt}}', 4326), 3857)) > 0.1 )" + 
+      // " {{nonspatial_filters}} " + 
+      // "ORDER BY area DESC)" +
 
 okm.text_search = {};
 okm.text_search.text_searching = false;
@@ -196,6 +245,12 @@ okm.util.state_hash = {
     'Wyoming': 'WY'
   };
 
+okm.util.check_if_need_load = function(elem){
+  if (elem.scrollHeight - elem.scrollTop === elem.clientHeight){
+    okm.sidebar.more_results();
+  }  
+};
+
 //from http://stackoverflow.com/questions/1669190/javascript-min-max-array-values
 okm.util.array_min = function(arr) {
   var len = arr.length, min = Infinity;
@@ -218,6 +273,9 @@ okm.util.array_max = function(arr) {
   return max;
 };
 
+okm.util.get_offset = function(){
+  return (okm.G.PAGE_NUMBER - 1) * okm.G.PER_PAGE || 0;
+};
 
 okm.util.sql = function(query, callback, format){
   var format_str = '';
@@ -242,17 +300,53 @@ okm.util.sql = function(query, callback, format){
   });
 };
 
+okm.util.bboxStringToLatLngBounds = function(bbox_str){
+  var a = bbox_str.split(",");
+  return L.latLngBounds([a[1],a[0]], [a[3],a[2]]);
+};  
+
+okm.util.bboxStringToWKT = function(bbox_str){
+  var bb = bbox_str.split(",");
+  return "POLYGON((" + bb[0] + " " + bb[1] + "," + bb[0] + " " + bb[3]+
+   "," + bb[2] + " " + bb[3]+ "," + bb[2] + " " + bb[1] +
+   "," + bb[0] + " " + bb[1] + "))";
+};
+
+okm.util.autosearch_off = function(){
+  $("#search-on-map-move").get()[0].checked = false;
+};
+
+okm.util.autosearch_on = function(){
+  $("#search-on-map-move").get()[0].checked = true;
+};
+
+okm.util.autosearch_status = function(){
+  return $("#search-on-map-move").get()[0].checked;
+};
+
+okm.util.get_url_hash_object = function (){
+  var a = {}, i;
+  var h = location.hash.slice(1).split("&");
+  for (i = 0; i < h.length; i++){
+    var keyvalue = h[i].split("=");
+    a[keyvalue[0]] = keyvalue[1];
+  }
+  return a;
+};
+
 
 $(window).resize(function() {
   sizeLayerControl();
 });
 
 $(document).on("click", ".feature-row", function(e) {
- 
   okm.sidebar.click(parseInt($(this).data("id"), 10));
 });
 
-if ( !("ontouchstart" in window) ) {
+if (!("ontouchstart" in window || 
+  window.navigator.pointerEnabled || 
+  window.navigator.msPointerEnabled)) {
+
   $(document).on("mouseover", ".feature-row", function(e) {
     var bbox_str = $(this).data("bbox");
     var b = okm.util.bboxStringToLatLngBounds(bbox_str);
@@ -260,7 +354,6 @@ if ( !("ontouchstart" in window) ) {
     okm.map.layers.highlight.clearLayers().addLayer(rect);
   });
 }
-
 
 okm.map.clearHighlight = function() {
   okm.map.layers.highlight.clearLayers();
@@ -361,6 +454,12 @@ $("#input_text_search").on("keypress",function(e){
   }
 });
 
+//"Infinite" scrolling of search results
+//see html and css for more results button if you prefer
+$(".sidebar-table").scroll(_.throttle(function(){
+  okm.util.check_if_need_load(this);
+}, 300));
+
 
 okm.text_search.click = function(){
   var raw_search_text = okm.text_search.get_search_text();
@@ -368,9 +467,7 @@ okm.text_search.click = function(){
   okm.text_search.execute(search_text);
 };
 
-okm.util.get_offset = function(){
-  return (okm.G.PAGE_NUMBER - 1) * okm.G.PER_PAGE || 0;
-};
+
 
 okm.text_search.execute = function(text){
   var query = okm.text_search.format_query(text);
@@ -534,19 +631,6 @@ okm.sidebar.click = function(id) {
   }
 };
 
-okm.util.bboxStringToLatLngBounds = function(bbox_str){
-  var a = bbox_str.split(",");
-  return L.latLngBounds([a[1],a[0]], [a[3],a[2]]);
-};  
-
-okm.util.bboxStringToWKT = function(bbox_str){
-  var bb = bbox_str.split(",");
-  return "POLYGON((" + bb[0] + " " + bb[1] + "," + bb[0] + " " + bb[3]+
-   "," + bb[2] + " " + bb[3]+ "," + bb[2] + " " + bb[1] +
-   "," + bb[0] + " " + bb[1] + "))";
-};
-
-
 function buildFilterRankQuery(input_bounds, offset){
   var nonspatial_filters = okm.filter.build_where();
   var bbox_wkt = okm.util.bboxStringToWKT(input_bounds.toBBoxString());
@@ -662,16 +746,6 @@ function syncUrlHash(){
   location.hash = [loc].join("&");
 }
 
-okm.util.get_url_hash_object = function (){
-  var a = {}, i;
-  var h = location.hash.slice(1).split("&");
-  for (i = 0; i < h.length; i++){
-    var keyvalue = h[i].split("=");
-    a[keyvalue[0]] = keyvalue[1];
-  }
-  return a;
-};
-
 
 function boundsToRbush(bounds){
   var sw = bounds.getSouthWest();
@@ -698,36 +772,12 @@ $("#search-on-map-move").change(function(e){
   }
 });
 
-okm.util.autosearch_off = function(){
-  $("#search-on-map-move").get()[0].checked = false;
-};
-
-okm.util.autosearch_on = function(){
-  $("#search-on-map-move").get()[0].checked = true;
-};
-
-okm.util.autosearch_status = function(){
-  return $("#search-on-map-move").get()[0].checked;
-};
 
 $("#more-results").click(function(e){
-  okm.G.PAGE_NUMBER++;
-  $("#loading").show();
-  if (!okm.text_search.text_searching){
-    filterRankFeatures(okm.map.layers.okmaps).then(function(){
-      featureList.add(featuresTemp);
-      $("#loading").hide();
-    }, function(err){
-      console.log(err);
-      $("#loading").hide();        
-    });  
-  }
-  else {
-    okm.text_search.more_results();
-  }
-  
+  okm.sidebar.more_results();
 });
 
+$(".sidebar-table").scroll
 okm.sidebar.add_results = function(){
   if (featuresTemp.length > 0){
     $("#no-results-found").hide();
@@ -736,6 +786,27 @@ okm.sidebar.add_results = function(){
   else if ($("tr.feature-row").length === 0){
     $("#no-results-found").show();
   }
+};
+
+okm.sidebar.more_results = function(){
+  okm.G.PAGE_NUMBER++;
+  $("#loading").show();
+  if (!okm.text_search.text_searching){
+    okm.map.more_results();
+  }
+  else {
+    okm.text_search.more_results();
+  }
+};
+
+okm.map.more_results = function(){
+  filterRankFeatures(okm.map.layers.okmaps).then(function(){
+    featureList.add(featuresTemp);
+    $("#loading").hide();
+  }, function(err){
+    console.log(err);
+    $("#loading").hide();        
+  });  
 };
 
 okm.sidebar.sync = function() {
@@ -881,17 +952,6 @@ function updateAttribution(e) {
   });
 }
 
-/*
-  okm.map.layers.street = L.tileLayer("https://{s}.tiles.mapbox.com/v4/mapbox.streets/{z}/{x}/{y}.{{tf}}?access_token={{token}}".replace("{{tf}}",tile_format).replace("{{token}}",okm.G.MB_TOKEN), {
-    maxZoom: 19,
-    detectRetina: true,
-   attribution: "&copy; Mapbox"
-  });
-  okm.map.layers.satellite = L.tileLayer("https://api.mapbox.com/styles/v1/mapbox/satellite-streets-v10/tiles/256/{z}/{x}/{y}?access_token={{token}}".replace("{{token}}",okm.G.MB_TOKEN), {
-     maxZoom: 19,
-    detectRetina: true,
-   attribution: "&copy; Mapbox"
-  });*/
   okm.map.layers.street = L.tileLayer("https://api.mapbox.com/styles/v1/mapbox/streets-v9/tiles/{z}/{x}/{y}{{retina}}?access_token={{token}}".replace("{{retina}}", L.Browser.retina ? "@2x" : "").replace("{{token}}",okm.G.MB_TOKEN), {
     maxZoom: 19,
     tileSize: 512,
@@ -1097,8 +1157,6 @@ function updateAttribution(e) {
     map.fire("moveend");
   });
 
-
-
   map.on("layeradd", updateAttribution);
   map.on("layerremove", updateAttribution);
 
@@ -1182,17 +1240,3 @@ function updateAttribution(e) {
     $(this).css("display", "none");
     $(".photon-icon").css("display","inline-block");
   });
-  // Leaflet patch to make layer control scrollable on touch browsers
-  /*var container = $(".leaflet-control-layers")[0];*/
-/*  if (!L.Browser.touch) {
-    L.DomEvent
-    .disableClickPropagation(container)
-    .disableScrollPropagation(container);
-  } else {
-    L.DomEvent.disableClickPropagation(container);
-  }
-
-
-
-*/
-

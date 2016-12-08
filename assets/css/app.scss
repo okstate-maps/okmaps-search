@@ -144,7 +144,8 @@ input[type="radio"], input[type="checkbox"] {
   z-index: 1; //seems to be necessary for proper display of right side of sidebar in IE and MS Edge ¯\_(ツ)_/¯
   width: 100%;
   top: 125px;
-  bottom: $sidebar-footer-height;
+  bottom: 0;
+  // bottom: $sidebar-footer-height; // can be used for more results button
   overflow-y: scroll;
   overflow-x: hidden;
 }
