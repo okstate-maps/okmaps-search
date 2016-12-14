@@ -161,6 +161,7 @@ okm.map.styles.highlight = {
       };
 okm.G.CARTO_USER = "krdyke";
 okm.G.MB_TOKEN = "pk.eyJ1Ijoia3JkeWtlIiwiYSI6Ik15RGcwZGMifQ.IR_NpAqXL1ro8mFeTIdifg";
+okm.G.MAPZEN_KEY = "mapzen-6dXEegt";
 okm.G.TABLE_NAME = "okmaps";
 okm.G.PER_PAGE = 10;
 okm.G.PAGE_NUMBER = 1;
@@ -1029,68 +1030,14 @@ function updateAttribution(e) {
     attributionControl: false
   });
   map.fitBounds(init_bounds);
-  //override onAdd to include form-control and empty classes
-  L.Control.Photon = L.Control.Photon.extend({
+ 
 
-      includes: L.Mixin.Events,
-
-      onAdd: function (map, options) {
-          this.map = map;
-          this.container = L.DomUtil.create('div', 'leaflet-photon');
-          this.icon = L.DomUtil.create('i','fa fa-2x fa-map-signs photon-icon' , this.container);
-          this.options = L.Util.extend(this.options, options);
-
-          this.input = L.DomUtil.create('input', 'photon-input form-control empty', this.container);
-          this.input.title = "Zoom to a place by name";
-          this.search = new L.PhotonSearch(map, this.input, this.options);
-          this.search.on('blur', this.forwardEvent, this);
-          this.search.on('focus', this.forwardEvent, this);
-          this.search.on('hide', this.forwardEvent, this);
-          this.search.on('selected', this.forwardEvent, this);
-          this.search.on('ajax:send', this.forwardEvent, this);
-          this.search.on('ajax:return', this.forwardEvent, this);
-          return this.container;
-      }
-  }); 
-
-  var searchControl = L.control.photon({
-        onSelected: onSelectedHandler,
-        resultsHandler: myHandler,
-        placeholder: '',
-        position: 'topright',
-        url: "https://photon.komoot.de/api/?",
-        formatResult: function (feature, el) {
-          var title = L.DomUtil.create('strong', '', el),
-              detailsContainer = L.DomUtil.create('small', '', el),
-              details = [],
-              type = this.formatType(feature);
-          if (feature.properties.state && feature.properties.state !== feature.properties.name &&
-               feature.properties.country && feature.properties.country === "United States of America"){
-            title.innerHTML = feature.properties.name + ", " + okm.util.state_hash[feature.properties.state]; 
-          }
-
-          else if (feature.properties.state && feature.properties.state !== feature.properties.name &&
-               feature.properties.country && feature.properties.country!== "United States of America"){
-             title.innerHTML = feature.properties.name + ", " + feature.properties.state; 
-          }
-
-          else {
-            title.innerHTML = feature.properties.name;
-          }
-
-          
-          if (type) {
-            details.push(type);
-          }
-          if (feature.properties.city && feature.properties.city !== feature.properties.name) {
-              details.push(feature.properties.city);
-          }
-          if (feature.properties.country) {
-            details.push(feature.properties.country);
-          } 
-          detailsContainer.innerHTML = details.join(', ');
-        }
-    });
+var searchControl = L.control.geocoder(okm.G.MAPZEN_KEY, {
+  position: "topright",
+  fullWidth: 400,
+  placeholder: null,
+  title: "Search for a place."
+});
 
   /* Layer control listeners that allow for a single markerClusters layer */
   map.on("overlayadd", function(e) {
@@ -1230,13 +1177,3 @@ function updateAttribution(e) {
   }).addTo(map);
 
   searchControl.addTo(map);
-
-  $(".photon-icon").click(function(e){
-    $(this).css("display", "none");
-    $("input.photon-input").css("display","inline-block").focus();
-  });
-  
-  $("input.photon-input").focusout(function(e){
-    $(this).css("display", "none");
-    $(".photon-icon").css("display","inline-block");
-  });

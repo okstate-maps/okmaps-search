@@ -1,0 +1,93 @@
+{
+  "name": "leaflet-geocoder-mapzen",
+  "version": "1.7.1",
+  "description": "Add Mapzen Search geocoding to your Leaflet map.",
+  "main": "dist/leaflet-geocoder-mapzen.js",
+  "directories": {
+    "example": "examples"
+  },
+  "scripts": {
+    "prepublish": "npm run copy-source-files && npm run minify-js && npm run minify-css",
+    "minify-js": "uglifyjs dist/leaflet-geocoder-mapzen.js -o dist/leaflet-geocoder-mapzen.min.js",
+    "minify-css": "cleancss -o dist/leaflet-geocoder-mapzen.min.css dist/leaflet-geocoder-mapzen.css",
+    "pretest": "npm run copy-source-files",
+    "test": "jake",
+    "copy-source-files": "cp src/*.css src/*.js dist/"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mapzen/leaflet-geocoder.git"
+  },
+  "keywords": [
+    "leaflet",
+    "plugin",
+    "search",
+    "geocoder",
+    "pelias",
+    "mapzen"
+  ],
+  "author": "",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/mapzen/leaflet-geocoder/issues"
+  },
+  "homepage": "https://github.com/mapzen/leaflet-geocoder",
+  "peerDependencies": {
+    "leaflet": "^0.7.x || ^1.0.0 || >=1.0.0-beta.1 || >=1.0.0-rc.1"
+  },
+  "devDependencies": {
+    "clean-css": "3.4.12",
+    "eslint": "3.1.1",
+    "eslint-config-semistandard": "6.0.2",
+    "eslint-config-standard": "5.3.5",
+    "eslint-plugin-promise": "2.0.0",
+    "eslint-plugin-standard": "2.0.0",
+    "expect.js": "0.3.1",
+    "happen": "0.3.1",
+    "jake": "8.0.12",
+    "karma": "1.1.2",
+    "karma-chrome-launcher": "1.0.1",
+    "karma-coverage": "1.1.1",
+    "karma-coveralls": "1.1.2",
+    "karma-firefox-launcher": "1.0.0",
+    "karma-mocha": "1.1.1",
+    "karma-nyan-reporter": "0.2.4",
+    "karma-phantomjs-launcher": "1.0.1",
+    "karma-safari-launcher": "1.0.0",
+    "mocha": "2.5.3",
+    "phantomjs-prebuilt": "2.1.8",
+    "sinon": "1.17.5",
+    "uglify-js": "2.6.0"
+  },
+  "semistandard": {
+    "globals": [
+      "define",
+      "XMLHttpRequest"
+    ]
+  },
+  "gitHead": "b62b9a928047724aff458ec7a6030e149a8b9cd0",
+  "_id": "leaflet-geocoder-mapzen@1.7.1",
+  "_shasum": "83224becbb9d66df54d30c80a159105e59085365",
+  "_from": "leaflet-geocoder-mapzen@latest",
+  "_npmVersion": "3.8.9",
+  "_nodeVersion": "6.2.0",
+  "_npmUser": {
+    "name": "louh",
+    "email": "lou@louhuang.com"
+  },
+  "dist": {
+    "shasum": "83224becbb9d66df54d30c80a159105e59085365",
+    "tarball": "https://registry.npmjs.org/leaflet-geocoder-mapzen/-/leaflet-geocoder-mapzen-1.7.1.tgz"
+  },
+  "maintainers": [
+    {
+      "name": "louh",
+      "email": "lou@louhuang.com"
+    }
+  ],
+  "_npmOperationalInternal": {
+    "host": "packages-16-east.internal.npmjs.com",
+    "tmp": "tmp/leaflet-geocoder-mapzen-1.7.1.tgz_1471976684538_0.9760564784519374"
+  },
+  "_resolved": "https://registry.npmjs.org/leaflet-geocoder-mapzen/-/leaflet-geocoder-mapzen-1.7.1.tgz"
+}

@@ -282,48 +282,22 @@ Geolocation
 /*
 Geocoder
 */
-div.leaflet-photon {
-  background: #fff;
-  border-radius: 4px;
-  box-shadow: 0 1px 5px rgba(0, 0, 0, 0.4); }
-
-.leaflet-touch div.leaflet-photon {
-  box-shadow: none;
-  background-clip: padding-box;
-  border: 2px solid rgba(0, 0, 0, 0.2); }
-
-div.leaflet-photon input.photon-input {
-  border: none; }
-
-input.photon-input {
-  display: none; }
-
-.photon-icon {
-  text-align: center; }
-
-input.photon-input, .photon-icon {
-  height: 36px;
+.leaflet-pelias-control {
   width: 36px;
-  line-height: 36px;
-  cursor: pointer; }
+  height: 36px;
+  line-height: 36px; }
 
-.leaflet-touch input.photon-input, .leaflet-touch .photon-icon {
+.leaflet-touch .leaflet-pelias-control {
   width: 44px;
   height: 44px;
   line-height: 44px; }
 
-input.photon-input:active, input.photon-input:focus {
-  max-width: 300px;
-  width: 400px;
-  transition: width 0.5s;
-  background-image: none;
-  cursor: text; }
+.leaflet-touch .leaflet-pelias-input {
+  padding-left: 30px; }
 
-.photon-autocomplete {
-  padding-left: 0px; }
-
-.photon-autocomplete li.on {
-  background-color: #FF9900; }
+.leaflet-pelias-search-icon {
+  background-image: url(../img/mapsigns.png);
+  background-size: initial; }
 
 /*
 Slider (for year filtering)

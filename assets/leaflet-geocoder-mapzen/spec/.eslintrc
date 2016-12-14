@@ -1,0 +1,14 @@
+{
+  "extends": ["semistandard"],
+  "env": {
+    "browser": true,
+    "mocha": true
+  },
+  "globals": {
+    "L": true,
+    "expect": false,
+    "sinon": false,
+    "happen": false,
+    "loadJSON": true
+  }
+}
