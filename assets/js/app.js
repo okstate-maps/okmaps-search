@@ -301,11 +301,22 @@ okm.util.sql = function(query, callback, format){
   });
 };
 
+/**
+  Converts a Leaflet bounding box string (obtained via L.latLngBounds.toBBoxString()) into a Leaflet latLngBounds object.
+  @param {String} a string with bounding box coordinates in a 'southwest_lng,southwest_lat,northeast_lng,northeast_lat' format (http://leafletjs.com/reference-1.0.2.html#latlngbounds-tobboxstring). 
+  @returns {Object} Instance of L.latLngBounds 
+*/
 okm.util.bboxStringToLatLngBounds = function(bbox_str){
   var a = bbox_str.split(",");
   return L.latLngBounds([a[1],a[0]], [a[3],a[2]]);
 };  
 
+/**
+  Converts a Leaflet bounding box string (obtained via L.latLngBounds.toBBoxString())
+  into Well Known Text (WKT)
+  @param {String} a string with bounding box coordinates in a 'southwest_lng,southwest_lat,northeast_lng,northeast_lat' format (http://leafletjs.com/reference-1.0.2.html#latlngbounds-tobboxstring). 
+  @returns {String}
+*/
 okm.util.bboxStringToWKT = function(bbox_str){
   var bb = bbox_str.split(",");
   return "POLYGON((" + bb[0] + " " + bb[1] + "," + bb[0] + " " + bb[3]+
@@ -344,9 +355,11 @@ $(document).on("click", ".feature-row", function(e) {
   okm.sidebar.click(parseInt($(this).data("id"), 10));
 });
 
-if (!("ontouchstart" in window || 
-  window.navigator.pointerEnabled || 
-  window.navigator.msPointerEnabled)) {
+
+// if (!("ontouchstart" in window || 
+//   window.navigator.pointerEnabled || 
+//   window.navigator.msPointerEnabled)) {
+if (!("ontouchstart" in window)) {
 
   $(document).on("mouseover", ".feature-row", function(e) {
     var bbox_str = $(this).data("bbox");
