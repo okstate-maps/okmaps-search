@@ -791,7 +791,6 @@ $("#more-results").click(function(e){
   okm.sidebar.more_results();
 });
 
-$(".sidebar-table").scroll
 okm.sidebar.add_results = function(){
   if (featuresTemp.length > 0){
     $("#no-results-found").hide();
@@ -852,110 +851,6 @@ okm.sidebar.sync = function() {
     }
 };
 
-
-function myHandler(geojson) {
-    console.debug(geojson);
-}
-
-
-function animateIcon(){
-   var icon = $('.animated-icon').get()[0];
-  
-   setTimeout(function(){
-      icon.style.width = '50px';
-      icon.style.height = '50px';
-      icon.style.marginLeft = '-25px';
-      icon.style.marginTop = '-25px';
-    }, 300);
-
-    setTimeout(function(){
-      icon.style.width = '30px';
-      icon.style.height = '30px';
-      icon.style.marginLeft = '-15px';
-      icon.style.marginTop = '-15px';
-    }, 900);
-
-    setTimeout(function(){
-      icon.style.width = '50px';
-      icon.style.height = '50px';
-      icon.style.marginLeft = '-25px';
-      icon.style.marginTop = '-25px';
-    }, 1500);
-
-    setTimeout(function(){
-      icon.style.width = '30px';
-      icon.style.height = '30px';
-      icon.style.marginLeft = '-15px';
-      icon.style.marginTop = '-15px';
-    }, 2100);
-
-    setTimeout(function(){
-      icon.style.width = '50px';
-      icon.style.height = '50px';
-      icon.style.marginLeft = '-25px';
-      icon.style.marginTop = '-25px';
-    }, 2700);
-
-    setTimeout(function(){
-      icon.style.width = '30px';
-      icon.style.height = '30px';
-      icon.style.marginLeft = '-15px';
-      icon.style.marginTop = '-15px';
-    }, 3300);
-
-
-}
-
-function onSelectedHandler(geojson){
-  if (geojson.properties.hasOwnProperty("extent")){
-    var bounds = [[geojson.properties.extent[1], 
-                   geojson.properties.extent[0]],
-                  [geojson.properties.extent[3], 
-                   geojson.properties.extent[2]]
-            ];
-
-    var r = L.rectangle(bounds, {
-      fillColor: "#ff7300",
-      stroke: false
-    });
-
-    r.addTo(map);
-    map.fitBounds(bounds);
-    setTimeout(function(){
-      $(r.getElement()).fadeOut({"complete": function(){r.remove();}});
-    }, 3000);
-  }
-  else if (geojson.geometry.hasOwnProperty("coordinates") &&
-           geojson.geometry.coordinates.length === 2){
-    var latlng = geojson.geometry.coordinates.reverse();
-    map.setView(latlng, 13, {
-      maxZoom:14
-    });
-
-    var icon = L.divIcon({
-      iconSize: [30, 30],
-      iconAnchor: [15, 15],
-      popupAnchor: [10, 0],
-      shadowSize: [0, 0],
-      className: 'animated-icon',
-      html: ''
-    });
-
-    var m = L.marker(latlng, {
-      icon: icon
-    });
-
-    m.on('add', function(){
-      animateIcon();
-    });
-      
-    m.addTo(map);
-    setTimeout(function(){
-      $(m.getElement()).fadeOut({"complete": function(){m.remove();}});
-    }, 4000);
-    
-  }  
-}
 
 /* Attribution control */
 function updateAttribution(e) {
@@ -1049,6 +944,7 @@ var searchControl = L.control.geocoder(okm.G.MAPZEN_KEY, {
   position: "topright",
   fullWidth: 400,
   placeholder: null,
+  autocomplete: false,
   title: "Search for a place."
 });
 

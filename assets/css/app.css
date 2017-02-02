@@ -29,7 +29,13 @@ input[type="radio"], input[type="checkbox"] {
   width: 160px;
   height: 120px;
   white-space: nowrap;
-  text-align: center; }
+  text-align: center;
+  position: relative; }
+
+.thumbnail-background i {
+  position: absolute;
+  left: 70px;
+  top: 50px; }
 
 .thumbnail-background-helper {
   display: inline-block;
@@ -293,7 +299,7 @@ Geocoder
   line-height: 44px; }
 
 .leaflet-touch .leaflet-pelias-input {
-  padding-left: 30px; }
+  padding-left: 41px; }
 
 .leaflet-pelias-search-icon {
   background-image: url(../img/mapsigns.png);

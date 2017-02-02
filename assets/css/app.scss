@@ -41,6 +41,13 @@ input[type="radio"], input[type="checkbox"] {
   height: 120px;
   white-space: nowrap;
   text-align: center;
+  position:relative;
+}
+
+.thumbnail-background i {
+ position:absolute;
+ left:70px;
+ top:50px;
 }
 
 .thumbnail-background-helper {
@@ -346,7 +353,7 @@ Geocoder
 }
 
 .leaflet-touch .leaflet-pelias-input {
-  padding-left: 30px;
+  padding-left: 41px;
 }
 
 .leaflet-pelias-search-icon {
