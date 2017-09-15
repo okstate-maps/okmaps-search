@@ -173,6 +173,7 @@ okm.G.REF_URL = okm.G.CDM_ROOT + "/cdm/ref/collection/OKMaps/id/";
 okm.G.IMG_URL = okm.G.CDM_ROOT + "/utils/ajaxhelper/?CISOROOT=OKMaps&CISOPTR={{contentdm_number}}&action=2&DMSCALE={{scale}}&DMWIDTH={{width}}&DMHEIGHT={{height}}&DMX=0&DMY=0&DMTEXT=&DMROTATE=0";
 okm.G.IIIF_URL = okm.G.CDM_ROOT + "digital/iiif/OKMaps/{{contentdm_number}}/info.json";
 okm.G.THUMBNAIL_URL = okm.G.CDM_ROOT + "/utils/getthumbnail/collection/OKMaps/id/";
+okm.G.MODAL_HEIGHT = Math.round($("#featureModal").height() * 0.6);
 okm.G.TABLE_FIELDS = ["the_geom", 
   "title", 
   "cartodb_id", 
@@ -911,10 +912,6 @@ function updateAttribution(e) {
         var iiif_url = okm.G.IIIF_URL.replace("{{contentdm_number}}", feature.properties.contentdm_number);
         var iiif_div_id = "iiif-" + feature.properties.contentdm_number;
         var ref_url = okm.G.REF_URL + feature.properties.contentdm_number;
-        var w = $("#featureModal div.modal-content").width() - 50;
-        w = w + "px";
-        var h = $("#featureModal").height() - 150;
-        h = h + "px";
         var content = "<table class='table table-striped table-bordered table-condensed'>" +
           "<tr><td>" + feature.properties.title.replace("'","&#39;") + "</td></tr>"+
           "<tr><td><a href='"+ ref_url+ "'>"+ ref_url +"</a></td></tr>"+
@@ -922,8 +919,8 @@ function updateAttribution(e) {
           //"<div class='feature-modal-image-helper'><a target='_none' href='"+ ref_url+"'><img class='feature-img img-responsive' alt= '" + 
           //feature.properties.title.replace("'","&#39;")+ "'src='"+
           //img_url+"'/></a></div>"+
-          "<div class='iiif-map' id='" + iiif_div_id + "' style='width:" + 
-           w + ";height:"+ h +"'></div>"+
+          "<div class='iiif-map' id='" + iiif_div_id + "' style='width:auto;" + 
+           "height:"+ okm.G.MODAL_HEIGHT +"px';></div>"+
           "</td></tr></table>";
 
         layer.on({
