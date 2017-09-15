@@ -1112,3 +1112,10 @@ var searchControl = L.control.geocoder(okm.G.MAPZEN_KEY, {
     .attr("title", "Search for a place.")
     .wrapInner("<span class='fa-stack fa-lg' style='right:3px;bottom:3px;'><i class='fal fa-search fa-stack-2x' style='left:3px;top:2px;'></i><i class='fas fa-map-marker-alt fa-stack-1x'></i></span>");
    
+   $("#input_text_search").addClear({
+      symbolClass: "far fa-times-circle",
+      onClear: function(){
+        okm.G.text_searching = false;
+        okm.sidebar.sync();
+      }
+   })
