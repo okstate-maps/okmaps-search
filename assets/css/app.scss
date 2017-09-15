@@ -357,10 +357,21 @@ Geocoder
 }
 
 .leaflet-pelias-search-icon {
-  background-image: url(../img/mapsigns.png);
+  /*background-image: url(../img/mapsigns.png);*/
+  background-image: none;
   background-size: initial;
   }
 
+/*
+Fullscreen Control plugin
+*/
+.leaflet-control-fullscreen a {
+  background-image:none;
+}
+
+.leaflet-control-fullscreen a i.fas {
+  line-height:inherit;
+}
 
 /*
 Slider (for year filtering)

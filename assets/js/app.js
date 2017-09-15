@@ -52,7 +52,7 @@ var map,
  featureList,
  okmapsSearch = [], 
  timeline_added = false, 
- featuresTemp = [];
+ geo = [];
 
 var okm = {};
 okm.G = {};
@@ -167,9 +167,11 @@ okm.G.PER_PAGE = 10;
 okm.G.PAGE_NUMBER = 1;
 okm.G.QUERY_URL = "https://{username}.carto.com/api/v2/sql".replace("{username}", okm.G.CARTO_USER);
 okm.G.BASE_URL = "SELECT {fields} FROM {table_name}";
-okm.G.CDM_ROOT = "http://dc.library.okstate.edu";
+//okm.G.CDM_ROOT = "http://dc.library.okstate.edu";
+okm.G.CDM_ROOT = "https://cdm17279.contentdm.oclc.org/";
 okm.G.REF_URL = okm.G.CDM_ROOT + "/cdm/ref/collection/OKMaps/id/";
 okm.G.IMG_URL = okm.G.CDM_ROOT + "/utils/ajaxhelper/?CISOROOT=OKMaps&CISOPTR={{contentdm_number}}&action=2&DMSCALE={{scale}}&DMWIDTH={{width}}&DMHEIGHT={{height}}&DMX=0&DMY=0&DMTEXT=&DMROTATE=0";
+okm.G.IIIF_URL = okm.G.CDM_ROOT + "digital/iiif/OKMaps/{{contentdm_number}}/info.json";
 okm.G.THUMBNAIL_URL = okm.G.CDM_ROOT + "/utils/getthumbnail/collection/OKMaps/id/";
 okm.G.TABLE_FIELDS = ["the_geom", 
   "title", 
@@ -451,6 +453,7 @@ $("#sidebar-hide-btn").click(function() {
 
 $("#featureModal").on("hide.bs.modal", function(){
   okm.map.clearHighlight();
+  okm.iiif_map.remove();
 });
 
 $("#filterModal").on("hide.bs.modal", function(){
@@ -667,6 +670,8 @@ okm.filter.build_where = function(properties){
   var filters = Object.keys(okm.filter.criteria);
   var i = filters.length -1;
   var q = "";
+
+  //TODO add check for text search input and include
 
   for (i; i >= 0; i--){
 
@@ -903,25 +908,43 @@ function updateAttribution(e) {
                         .replace("{{width}}", feature.properties.img_width/10)
                         .replace("{{height}}", feature.properties.img_height/10)
                         .replace("{{scale}}", 10);
+        var iiif_url = okm.G.IIIF_URL.replace("{{contentdm_number}}", feature.properties.contentdm_number);
+        var iiif_div_id = "iiif-" + feature.properties.contentdm_number;
         var ref_url = okm.G.REF_URL + feature.properties.contentdm_number;
+        var w = $("#featureModal div.modal-content").width() - 50;
+        w = w + "px";
+        var h = $("#featureModal").height() - 150;
+        h = h + "px";
         var content = "<table class='table table-striped table-bordered table-condensed'>" +
           "<tr><td>" + feature.properties.title.replace("'","&#39;") + "</td></tr>"+
           "<tr><td><a href='"+ ref_url+ "'>"+ ref_url +"</a></td></tr>"+
           "<tr><td>"+
-          "<div class='feature-modal-image-helper'><a target='_none' href='"+ ref_url+"'><img class='feature-img img-responsive' alt= '" + 
-          feature.properties.title.replace("'","&#39;")+ "'src='"+
-          img_url+"'/></a></div></td></tr></table>";
+          //"<div class='feature-modal-image-helper'><a target='_none' href='"+ ref_url+"'><img class='feature-img img-responsive' alt= '" + 
+          //feature.properties.title.replace("'","&#39;")+ "'src='"+
+          //img_url+"'/></a></div>"+
+          "<div class='iiif-map' id='" + iiif_div_id + "' style='width:" + 
+           w + ";height:"+ h +"'></div>"+
+          "</td></tr></table>";
 
         layer.on({
           click: function (e) {
             $("#feature-title").html(feature.properties.title);
             $("#loading").show();
             $("#feature-info").html(content);
-            $("#featureModal img").on("load",function(){
+            //$("#featureModal img").on("load",function(){
               $("#loading").hide();
               $("#featureModal").modal("show");
+              okm.iiif_map = L.map(iiif_div_id,{
+                center: [0,0],
+                crs: L.CRS.Simple,
+                zoom:0,
+                fullscreenControl: true
+              });
+
+              $("#featureModal .leaflet-control-fullscreen a").wrapInner("<i class='fas fa-expand fa-2x'></i>");
+              L.tileLayer.iiif(iiif_url).addTo(okm.iiif_map);
               addToHighlight(feature);
-            });
+            //});
             
           }
         });
@@ -948,6 +971,7 @@ var searchControl = L.control.geocoder(okm.G.MAPZEN_KEY, {
   title: "Search for a place."
 });
 
+ 
   /* Layer control listeners that allow for a single markerClusters layer */
   map.on("overlayadd", function(e) {
     if (e.layer === okm.map.layers.okmapsLayer) {
@@ -1086,3 +1110,8 @@ var searchControl = L.control.geocoder(okm.G.MAPZEN_KEY, {
   }).addTo(map);
 
   searchControl.addTo(map);
+  var searchIcon = $(searchControl.getContainer())
+    .find("a")
+    .attr("title", "Search for a place.")
+    .wrapInner("<span class='fa-stack fa-lg' style='right:3px;bottom:3px;'><i class='fal fa-search fa-stack-2x' style='left:3px;top:2px;'></i><i class='fas fa-map-marker-alt fa-stack-1x'></i></span>");
+   
