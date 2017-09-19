@@ -1,3 +1,111 @@
+/*
+  Copyright (c) 2014, Alexandre Melard
+  All rights reserved.   
+  Copyright (c) 2008-2014 Institut National de l'Information Geographique et Forestiere (IGN) France.
+  Released under the BSD license.
+  ---------------------------------------------------------
+  Leaflet class to support WMTS (based on L.TileLayer.WMS)
+  from https://github.com/mylen/leaflet.TileLayer.WMTS
+ */
+L.TileLayer.WMTS = L.TileLayer.extend({
+    defaultWmtsParams: {
+        service: 'WMTS',
+        request: 'GetTile',
+        version: '1.0.0',
+        layers: '',
+        styles: '',
+        tilematrixSet: '',
+        format: 'image/jpeg'
+    },
+
+    initialize: function (url, options) { // (String, Object)
+        this._url = url;
+        var wmtsParams = L.extend({}, this.defaultWmtsParams);
+        var tileSize = options.tileSize || this.options.tileSize;
+        if (options.detectRetina && L.Browser.retina) {
+            wmtsParams.width = wmtsParams.height = tileSize * 2;
+        } else {
+            wmtsParams.width = wmtsParams.height = tileSize;
+        }
+        for (var i in options) {
+            // all keys that are not TileLayer options go to WMTS params
+            if (!this.options.hasOwnProperty(i) && i!="matrixIds") {
+                wmtsParams[i] = options[i];
+            }
+        }
+        this.wmtsParams = wmtsParams;
+        this.matrixIds = options.matrixIds||this.getDefaultMatrix();
+        L.setOptions(this, options);
+    },
+
+    onAdd: function (map) {
+        this._crs = this.options.crs || map.options.crs;
+        L.TileLayer.prototype.onAdd.call(this, map);
+    },
+
+    getTileUrl: function (coords) { // (Point, Number) -> String
+        var tileSize = this.options.tileSize;
+        var nwPoint = coords.multiplyBy(tileSize);
+        nwPoint.x+=1;
+        nwPoint.y-=1;
+        var sePoint = nwPoint.add(new L.Point(tileSize, tileSize));
+        var zoom = this._tileZoom;
+        var nw = this._crs.project(this._map.unproject(nwPoint, zoom));
+        var se = this._crs.project(this._map.unproject(sePoint, zoom));
+        tilewidth = se.x-nw.x;
+        //zoom = this._map.getZoom();
+        var ident = this.matrixIds[zoom].identifier;
+        var X0 = this.matrixIds[zoom].topLeftCorner.lng;
+        var Y0 = this.matrixIds[zoom].topLeftCorner.lat;
+        var tilecol=Math.floor((nw.x-X0)/tilewidth);
+        var tilerow=-Math.floor((nw.y-Y0)/tilewidth);
+        var url = L.Util.template(this._url, {s: this._getSubdomain(coords)});
+        return url + L.Util.getParamString(this.wmtsParams, url) + "&tilematrix=" + ident + "&tilerow=" + tilerow +"&tilecol=" + tilecol ;
+        /*
+        var tileBounds = this._tileCoordsToBounds(coords);
+        var zoom = this._tileZoom;
+        var nw = this._crs.project(tileBounds.getNorthWest());
+        var se = this._crs.project(tileBounds.getSouthEast());
+        var tilewidth = se.x-nw.x;
+        var ident = this.matrixIds[zoom].identifier;
+        var X0 = this.matrixIds[zoom].topLeftCorner.lng;
+        var Y0 = this.matrixIds[zoom].topLeftCorner.lat;
+        var tilecol=Math.floor((nw.x+1-X0)/tilewidth);
+        var tilerow=-Math.floor((nw.y-1-Y0)/tilewidth);
+        var url = L.Util.template(this._url, {s: this._getSubdomain(coords)});
+        console.log(L.Util.getParamString(this.wmtsParams, url) + "&tilematrix=" + ident + "&tilerow=" + tilerow +"&tilecol=" + tilecol );
+        return url + L.Util.getParamString(this.wmtsParams, url) + "&tilematrix=" + ident + "&tilerow=" + tilerow +"&tilecol=" + tilecol ;
+        */
+    },
+
+    setParams: function (params, noRedraw) {
+        L.extend(this.wmtsParams, params);
+        if (!noRedraw) {
+            this.redraw();
+        }
+        return this;
+    },
+    
+    getDefaultMatrix : function () {
+        /**
+         * the matrix3857 represents the projection 
+         * for in the IGN WMTS for the google coordinates.
+         */
+        var matrixIds3857 = new Array(22);
+        for (var i= 0; i<22; i++) {
+            matrixIds3857[i]= {
+                identifier    : "" + i,
+                topLeftCorner : new L.LatLng(20037508.3428,-20037508.3428)
+            };
+        }
+        return matrixIds3857;
+    }
+});
+
+L.tileLayer.wmts = function (url, options) {
+    return new L.TileLayer.WMTS(url, options);
+};
+
 //Object.keys polyfill
 // From https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/keys
 if (!Object.keys) {
@@ -254,7 +362,7 @@ okm.util.state_hash = {
 okm.util.check_if_need_load = function(elem){
   if (elem.scrollHeight - elem.scrollTop === elem.clientHeight ||
       Math.abs((elem.scrollHeight - elem.scrollTop) - elem.clientHeight) < 2){
-    
+
       okm.sidebar.more_results();
   }  
 };
@@ -889,6 +997,22 @@ function updateAttribution(e) {
     zoomOffset: -1,
     attribution: "&copy; Mapbox"
   });
+  okm.map.layers.counties = L.tileLayer("https://api.mapbox.com/styles/v1/krdyke/cj7rus41ceagg2rny2tgglav3/tiles/256/{z}/{x}/{y}{{retina}}?access_token={{token}}".replace("{{retina}}", L.Browser.retina ? "@2x" : "").replace("{{token}}", okm.G.MB_TOKEN), {
+    maxZoom: 19,
+    tileSize: 256
+    //zoomOffset: -1
+  });
+
+  okm.map.layers.townshiprange = L.tileLayer.wmts(
+    "https://tiles{s}.arcgis.com/tiles/jWQlP64OuwDh6GGX/arcgis/rest/services/OK_TownshipRange/MapServer/WMTS",
+    { 
+      layer: 'OK_TownshipRange',
+      style: 'default',
+      tilematrixSet: "default028mm",
+      format: 'image/png',
+      subdomains: '1234'
+    }
+  );
 
   /* Overlay Layers */
   okm.map.layers.highlight = L.geoJson(null, {
@@ -1108,12 +1232,13 @@ var searchControl = L.control.geocoder(okm.G.MAPZEN_KEY, {
   };
 
   var groupedOverlays = {
-    "Maps": {
-      "": okm.map.layers.okmapsLayer
+    "Overlays": {
+      "OK Counties": okm.map.layers.counties,
+      "OK Township Range": okm.map.layers.townshiprange
     }
   };
 
-  var layerControl = L.control.groupedLayers(baseLayers, {
+  var layerControl = L.control.groupedLayers(baseLayers, groupedOverlays, {
     collapsed: isCollapsed
   }).addTo(map);
 
