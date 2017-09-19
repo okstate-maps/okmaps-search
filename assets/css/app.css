@@ -101,9 +101,6 @@ input[type="radio"], input[type="checkbox"] {
 .feature-row {
   cursor: pointer; }
 
-.autosearch {
-  padding-top: 8px; }
-
 .sidebar-wrapper {
   width: 100%;
   height: 100%;
@@ -327,6 +324,18 @@ Slider (for year filtering)
   margin-top: 40px;
   margin-left: 10%;
   margin-bottom: 20px; }
+
+/*
+UpdateSearchCheckbox Control
+*/
+.autosearch {
+  padding: 8px;
+  background-color: white;
+  border: 2px solid rgba(0, 0, 0, 0.2);
+  border-radius: 4px; }
+
+.autosearch label {
+  margin: 0; }
 
 /*
 Typeahead (not used currently)

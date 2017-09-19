@@ -253,7 +253,6 @@ L.TileLayer.Iiif = L.TileLayer.extend({
     var _this = this,
       tolerance = 0.8,
       imageSize;
-
     for (var i = _this.maxNativeZoom; i >= 0; i--) {
       imageSize = this._imageSizes[i];
       if (imageSize.x * tolerance < mapSize.x && imageSize.y * tolerance < mapSize.y) {
@@ -261,7 +260,7 @@ L.TileLayer.Iiif = L.TileLayer.extend({
       }
     }
     // return a default zoom
-    return 2;
+    return 0;
   }
 });
 
