@@ -252,9 +252,10 @@ okm.util.state_hash = {
   };
 
 okm.util.check_if_need_load = function(elem){
-
-  if (elem.scrollHeight - elem.scrollTop === elem.clientHeight){
-    okm.sidebar.more_results();
+  if (elem.scrollHeight - elem.scrollTop === elem.clientHeight ||
+      Math.abs((elem.scrollHeight - elem.scrollTop) - elem.clientHeight) < 2){
+    
+      okm.sidebar.more_results();
   }  
 };
 
