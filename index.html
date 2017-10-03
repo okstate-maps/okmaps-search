@@ -83,7 +83,7 @@
             </div>
             <div class="panel-body">
               <div class="row">
-                <div class="col-xs-8 col-md-8">
+                <div class="col-xs-12 col-md-12">
                   <div class="input-group" data-step="2" data-intro="Or search by text.">
                     <span class="input-group-btn">
                       <button class="btn btn-default" type="button" onclick="okm.text_search.click()">
@@ -93,12 +93,16 @@
                     <input id="input_text_search" type="text" class="form-control form-control-search" placeholder="Search by text">
                   </div>
                 </div>
-                <div class="col-xs-4 col-md-4">
+              </div>
+              <div class="row top-buffer">
+                <div class="col-xs-12 col-md-12">
 
                     <button data-step="5" data-intro="Click here for filter options." class="btn btn-default" id="filter-options" title="Filter search results">
-                      <i class="fas fa-filter"></i>
+                      <i class="fas fa-filter"></i><span>&nbsp;Filter options</span>
                     </button>
                 </div>
+              </div>
+
              <!--  <div class="row"> -->
 
               <!--
@@ -109,16 +113,13 @@
                   </div>
                 </div>
               -->
-
-               </div>
-               
             </div>
             <div class="sidebar-table">
-            <div id="no-results-found" class="padded-multiline">
-              <div>
-                 <span >No results found. Zoom out and/or change any filters.</span>
+              <div id="no-results-found" class="padded-multiline">
+                <div>
+                   <span >No results found. Zoom out and/or change any filters.</span>
+                </div>
               </div>
-            </div>
               <table class="table table-striped table-hover" data-step="3" data-intro="Results show up here." data-position="right" id="feature-list">
                 <thead class="hidden">
                   <tr>

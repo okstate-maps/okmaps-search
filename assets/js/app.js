@@ -159,7 +159,6 @@ window.scrollTo(0,1);
 var map, 
  featureList,
  okmapsSearch = [], 
- timeline_added = false, 
  geo = [];
 
 var okm = {};
@@ -275,16 +274,18 @@ okm.G.MAPZEN_KEY = "mapzen-6dXEegt";
 okm.G.TABLE_NAME = "okmaps";
 okm.G.PER_PAGE = 10;
 okm.G.PAGE_NUMBER = 1;
-okm.G.QUERY_URL = "https://{username}.carto.com/api/v2/sql".replace("{username}", okm.G.CARTO_USER);
-okm.G.BASE_URL = "SELECT {fields} FROM {table_name}";
+okm.G.DEFAULT_BBOX_STRING = "-103.62304687500001,31.690781806136822,-93.40576171875001,39.57182223734374";
+okm.G.QUERY_URL = "https://{{username}}.carto.com/api/v2/sql".replace("{{username}}", okm.G.CARTO_USER);
+okm.G.BASE_URL = "SELECT {{fields}} FROM {{table_name}}";
 //okm.G.CDM_ROOT = "http://dc.library.okstate.edu";
 okm.G.CDM_ROOT = "https://cdm17279.contentdm.oclc.org";
 okm.G.REF_URL = okm.G.CDM_ROOT + "/cdm/ref/collection/OKMaps/id/";
 okm.G.IMG_URL = okm.G.CDM_ROOT + "/utils/ajaxhelper/?CISOROOT=OKMaps&CISOPTR={{contentdm_number}}&action=2&DMSCALE={{scale}}&DMWIDTH={{width}}&DMHEIGHT={{height}}&DMX=0&DMY=0&DMTEXT=&DMROTATE=0";
 okm.G.IIIF_URL = okm.G.CDM_ROOT + "/digital/iiif/OKMaps/{{contentdm_number}}/info.json";
 okm.G.THUMBNAIL_URL = okm.G.CDM_ROOT + "/utils/getthumbnail/collection/OKMaps/id/";
-okm.G.MODAL_HEIGHT = Math.round($("#featureModal").height() * 0.6);
-okm.G.TABLE_FIELDS = ["the_geom", 
+okm.G.MODAL_HEIGHT = Math.round($("#featureModal").height() * 0.65);
+okm.G.TABLE_FIELDS = [
+  "the_geom", 
   "title", 
   "cartodb_id", 
   "original_date",
@@ -294,8 +295,8 @@ okm.G.TABLE_FIELDS = ["the_geom",
   //"img_height",
   "size"];
 okm.G.CARTO_URL = okm.G.BASE_URL
-    .replace("{table_name}", okm.G.TABLE_NAME)
-    .replace("{fields}", okm.G.TABLE_FIELDS.join(", "));
+    .replace("{{table_name}}", okm.G.TABLE_NAME)
+    .replace("{{fields}}", okm.G.TABLE_FIELDS.join(", "));
 
 okm.util.state_hash = {
     'Alabama': 'AL',
@@ -738,7 +739,6 @@ okm.filter.get_input_values = function(elems){
 };
 
 
-
 okm.filter.init = function(features){
   okm.filter.collection(features);
   okm.filter.year(features);
@@ -749,9 +749,10 @@ function animateSidebar() {
   $("#sidebar").animate({
     width: "toggle"
   }, 350, function() {
-    map.invalidateSize({pan:false});
+   map.invalidateSize({pan:false});
   });
 }
+
 
 function sizeLayerControl() {
   $(".leaflet-control-layers").css("max-height", $("#map").height() - 50);
@@ -771,9 +772,9 @@ okm.sidebar.click = function(id) {
 function buildFilterRankQuery(input_bounds, offset){
   var nonspatial_filters = okm.filter.build_where();
   var bbox_wkt = okm.util.bboxStringToWKT(input_bounds.toBBoxString());
-  var url = okm.G.BASE_URL.replace("{username}", okm.G.CARTO_USER)
-    .replace("{table_name}", okm.G.TABLE_NAME)
-    .replace("{fields}", "cartodb_id");
+  var url = okm.G.BASE_URL.replace("{{username}}", okm.G.CARTO_USER)
+    .replace("{{table_name}}", okm.G.TABLE_NAME)
+    .replace("{{fields}}", "cartodb_id");
   var q = okm.filter.filter_rank_query
     .replace(/{{bbox_wkt}}/g, bbox_wkt)
     .replace(/{{nonspatial_filters}}/g, nonspatial_filters)
@@ -840,13 +841,14 @@ okm.search_carto = function(query){
           short_title = full_title.length > 50 ? short_title.substr(0, Math.min(short_title.length, short_title.lastIndexOf(" "))) + "..." : full_title;
           
           if (cdb_ids.indexOf(l.feature.properties.cartodb_id) === -1){
-             cdb_ids.push(l.feature.properties.cartodb_id);
+            cdb_ids.push(l.feature.properties.cartodb_id);
             featuresTemp.push({
               "cdm": l.feature.properties.contentdm_number,
               "carto": l.feature.properties.cartodb_id,
               "id": L.stamp(l),
               "bbox": l.getBounds().toBBoxString(),
               "feature-name": short_title,
+              "feature-name-hover": full_title,
               "feature-sort-name":l.feature.properties.original_date,
               "feature-thumbnail":okm.G.THUMBNAIL_URL + l.feature.properties.contentdm_number,
               "feature-row": full_title          
@@ -948,31 +950,24 @@ okm.map.more_results = function(){
 
 okm.sidebar.sync = function() {
   console.log("okm.sidebar.sync");
-  var start,start2,end,end2;
+  var start, end;
+  start = performance.now();
+  $("#loading").show();
 
-  /* Loop through theaters layer and add only features which are in the map bounds */
-  if (!timeline_added){
+  filterRankFeatures(okm.map.layers.okmaps).then(function(){
+
+    featureList.clear();
+    okm.sidebar.add_results();
+    $(".sidebar-table").scrollTop(0);
+
+    end = performance.now();
+    console.log("3:  "+ (end - start) + " milliseconds.");
+    $("#loading").hide();
     
-      start = performance.now();
-      $("#loading").show();
-
-      filterRankFeatures(okm.map.layers.okmaps).then(function(){
-
-        featureList.clear();
-        okm.sidebar.add_results();
-        $(".sidebar-table").scrollTop(0);
-
-        end = performance.now();
-        console.log("3:  "+ (end - start) + " milliseconds.");
-        $("#loading").hide();
-      },function(err){
-        console.log(err);
-        $("#loading").hide();        
-      });  
-  }
-    else {
-      filterRankFeatures(timeline);
-    }
+  }, function(err){
+    console.log(err);
+    $("#loading").hide();        
+  });  
 };
 
 
@@ -1024,7 +1019,6 @@ function updateAttribution(e) {
   
   /* Empty layer placeholder to add to layer control for listening when to add/remove okmaps to markerClusters layer */
   okm.map.layers.okmapsLayer = L.geoJson(null);
-  //timelineLayer = L.geoJson(null);
   okm.map.layers.okmaps = L.geoJson(null, {
     style: function(feature){
       return {
@@ -1053,8 +1047,7 @@ function updateAttribution(e) {
           //"<div class='feature-modal-image-helper'><a target='_none' href='"+ ref_url+"'><img class='feature-img img-responsive' alt= '" + 
           //feature.properties.title.replace("'","&#39;")+ "'src='"+
           //img_url+"'/></a></div>"+
-          "<div class='iiif-map' id='" + iiif_div_id + "' style='width:auto;" + 
-           "height:"+ okm.G.MODAL_HEIGHT +"px';></div>"+
+          "<div class='iiif-map' id='" + iiif_div_id + "' style='width:auto;'></div>"+
           "</td></tr></table>";
 
         layer.on({
@@ -1064,6 +1057,7 @@ function updateAttribution(e) {
             $("#feature-info").html(content);
             //$("#featureModal img").on("load",function(){
             $("#loading").hide();
+            $(".iiif-map").css("height", Math.round($("#container").height() * 0.50) + "px");
             $("#featureModal").modal("show");
           
             okm.iiif.map = L.map(iiif_div_id,{
@@ -1085,7 +1079,7 @@ function updateAttribution(e) {
     }
   });
 
-  var init_bounds_str = okm.util.get_url_hash_object().loc || "-103.62304687500001,31.690781806136822,-93.40576171875001,39.57182223734374";
+  var init_bounds_str = okm.util.get_url_hash_object().loc || okm.G.DEFAULT_BBOX_STRING;
   var init_bounds = okm.util.bboxStringToLatLngBounds(init_bounds_str);
   map = L.map("map", {
     layers: [okm.map.layers.street, okm.map.layers.okmapsLayer, okm.map.layers.highlight],
@@ -1261,12 +1255,12 @@ L.Control.UpdateSearchCheckbox = L.Control.extend({
   
   onAdd: function(map){
     var div = L.DomUtil.create("div");
-    var content = '<div class="autosearch" data-step="4" data-intro="Uncheck this to prevent results from changing when you move the map.">'+
+    var content = '<div  class="autosearch" data-step="4" data-intro="Uncheck this to prevent results from changing when you move the map.">'+
                     '<input id="search-on-map-move" checked="" type="checkbox">'+
-                    '<label for="search-on-map-move"> Redo search when I move the map</label>'+
+                    '<label class="disable-text-selection" for="search-on-map-move"> Redo search when I move the map</label>'+
                   '</div>';
     div.innerHTML = content;
-
+    L.DomEvent.disableClickPropagation(div);
     return div;
   },
 

@@ -10,6 +10,21 @@ body {
 input[type="radio"], input[type="checkbox"] {
   margin: 0; }
 
+.modal-content {
+  max-height: 70%; }
+
+.top-buffer {
+  margin-top: 5px; }
+
+.disable-text-selection {
+  -webkit-user-select: none;
+  /* Chrome all / Safari all */
+  -moz-user-select: none;
+  /* Firefox all */
+  -ms-user-select: none;
+  /* IE 10+ */
+  user-select: none; }
+
 #sidebar {
   display: block;
   height: 100%;
@@ -128,7 +143,7 @@ input[type="radio"], input[type="checkbox"] {
   position: absolute;
   z-index: 1;
   width: 100%;
-  top: 125px;
+  top: 130px;
   bottom: 0;
   overflow-y: scroll;
   overflow-x: hidden; }
@@ -148,6 +163,9 @@ input[type="radio"], input[type="checkbox"] {
 .table {
   margin-bottom: 0px; }
 
+/*
+Sidebar footer
+*/
 .sidebar-footer {
   height: 60px;
   width: 100%;
@@ -182,6 +200,9 @@ input[type="radio"], input[type="checkbox"] {
 .leaflet-control-layers-list input[type="radio"], input[type="checkbox"] {
   margin: 2px; }
 
+/*
+Navbar
+*/
 .navbar .navbar-brand {
   font-weight: bold;
   font-size: 25px;
@@ -236,29 +257,25 @@ input[type="radio"], input[type="checkbox"] {
 
   .leaflet-control-container {
     display: none !important; } }
-.leaflet-control-container .leaflet-timeline-controls {
-  box-sizing: border-box;
-  width: 100%;
-  margin: 0;
-  margin-bottom: 15px; }
-
-.leaflet-timeline-controls button {
-  padding: 5%; }
-
 .leaflet-control-layers {
   border-radius: 4px; }
 
 /*
 Bigger Zoom in/out buttons
 */
+/*
 .leaflet-bar a, .leaflet-bar a:hover {
   width: 36px;
-  height: 36px;
-  line-height: 36px; }
-
+  height: 36px;  
+  line-height: 36px;
+}
+*/
+/*
 .leaflet-control-zoom-in, .leaflet-control-zoom-out {
-  font-size: 24px; }
-
+  font-size: 24px;
+}
+*/
+.leaflet-bar a, .leaflet-bar a:hover,
 .leaflet-touch .leaflet-bar a, .leaflet-touch .leaflet-bar a:hover {
   width: 44px;
   height: 44px;
@@ -274,9 +291,6 @@ Geolocation
   color: #FF7300; }
 
 .leaflet-control-locate a {
-  font-size: 1.6em; }
-
-.leaflet-touch .leaflet-control-locate a {
   font-size: 2em; }
 
 .leaflet-control-locate a {
@@ -285,23 +299,23 @@ Geolocation
 /*
 Geocoder
 */
-.leaflet-pelias-control {
-  width: 36px;
-  height: 36px;
-  line-height: 36px; }
-
-.leaflet-touch .leaflet-pelias-control {
+.leaflet-pelias-control, .leaflet-touch .leaflet-pelias-control {
   width: 44px;
   height: 44px;
   line-height: 44px; }
 
-.leaflet-touch .leaflet-pelias-input {
+.leaflet-pelias-input {
   padding-left: 41px; }
 
 .leaflet-pelias-search-icon {
   /*background-image: url(../img/mapsigns.png);*/
   background-image: none;
   background-size: initial; }
+
+.leaflet-pelias-control.leaflet-pelias-expanded {
+  width: 280px;
+  max-width: 100%;
+  height: 44px; }
 
 /*
 Fullscreen Control plugin
