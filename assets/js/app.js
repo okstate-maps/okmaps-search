@@ -159,7 +159,6 @@ window.scrollTo(0,1);
 var map, 
  featureList,
  okmapsSearch = [], 
- timeline_added = false, 
  geo = [];
 
 var okm = {};
@@ -173,79 +172,168 @@ okm.filter = {};
 okm.filter.criteria = {};
 
 //how to rank search results gets handled in this thing
-okm.filter.filter_rank_query = "SELECT cartodb_id, sort_order from " + //parent wrapper
 
-"(" + //parent
+//okm.filter.filter_rank_query = "SELECT cartodb_id, sort_order from " + //parent wrapper
+
+// okm.filter.min_centroid_dist_query = 
+//         "select MIN("+
+//            "ST_Distance("+
+//             "ST_Centroid("+
+//               "ST_Transform("+
+//                 "ST_GeomFromText("+
+//                   "'{{bbox_wkt}}', 4326"+
+//                   "), 3857"+
+//                 ")"+
+//               "), ST_Centroid("+
+//                 "the_geom_webmercator"+
+//               ")"+
+//               ") "+
+//           ") as min_d from {{table_name}}";
+
+// okm.filter.filter_rank_query = 
+
+//           "SELECT cartodb_id, "+
+            
+//        "(1 * abs(log(2.0, (0.000000000000001 + (St_area(St_transform(St_geomfromtext('{{bbox_wkt}}', 4326), 3857)))/area )::numeric))) as area_ratio,"+
+//  log2 area
+
+//      "(1 * abs(log(0.000000000000001 + (St_area(St_transform(St_geomfromtext('{{bbox_wkt}}', 4326), 3857)))/area))) as area_ratio,"+
     
-   "(" + //1st clause
+//   end log2 area
 
-        //experiment 2: return maps very close in area (but can be larger than viewport)
-          "SELECT 1 as sort_order, cartodb_id FROM {{table_name}} as c1 WHERE" +
-          " ST_GeomFromText('{{bbox_wkt}}', 4326) && ST_Centroid(the_geom)" +
-          " AND " +
-          "(" + 
-            "abs( 1 - (area / " + 
-            " ST_Area(ST_Transform(ST_GeomFromText('{{bbox_wkt}}', 4326), 3857)))) < 0.4" + 
-          ")" + 
-          " {{nonspatial_filters}}" + 
-          " ORDER BY ST_Centroid(ST_Transform(ST_GeomFromText('{{bbox_wkt}}', 4326), 3857)) <-> ST_Centroid(the_geom_webmercator) ASC" +
-    
-   " )" + //end 1st
+//   log2
 
-  " UNION ALL "+
-    
-  " ( " + //2nd clause
+//           "(1 * "+
+//             "log(2.0, (0.000000000000001 + " + 
+//               "St_distance("+
+//                 "St_centroid("+
+//                   "St_transform("+
+//                     "St_geomfromtext('{{bbox_wkt}}', 4326), 3857)), St_centroid(the_geom_webmercator))"+
+//                        "/ {{min_d}}"+
+//               ")::numeric)"+//log
+//             ") as distance_ratio, "+//clause2
 
-        //first set of results is those whose bbox is entirely contained
-        // within the viewport, sorted by area from largest to smallest
-          " SELECT 2 as sort_order, cartodb_id FROM {{table_name}} as c2 WHERE" +
-          " ST_GeomFromText('{{bbox_wkt}}', 4326) ~ the_geom {{nonspatial_filters}}" + 
-          " ORDER BY " + 
-          " area DESC " +
-          " , " +
-          " ST_Centroid(ST_Transform(ST_GeomFromText('{{bbox_wkt}}', 4326), 3857)) <-> ST_Centroid(the_geom_webmercator) ASC " +
-
-  " )" + //end 2nd
-
-  " UNION ALL "+
-    
-  " ( " + //3rd clause
+// end log2 distance
+          
+//           "(1 * "+
+//             "log(0.000000000000001 + " + 
+//               "St_distance("+
+//                 "St_centroid("+
+//                   "St_transform("+
+//                     "St_geomfromtext('{{bbox_wkt}}', 4326), 3857)), St_centroid(the_geom_webmercator))"+
+//                        "/ {{min_d}}"+
+//               ")"+//log
+//             ") as distance_ratio, "+//clause2
   
-    // The Catch-All: returns maps whose bounding box intersects the viewport in *any* way
-    // and order by distance from center
-    "SELECT 3 as sort_order, cartodb_id FROM {{table_name}} as c3 WHERE" +
-      " ST_GeomFromText('" + 
-      "{{bbox_wkt}}" + "', 4326) && the_geom " + 
-      "{{nonspatial_filters}}" +
-      " ORDER BY " +
-      " ST_Centroid(ST_Transform(ST_GeomFromText('{{bbox_wkt}}', 4326), 3857)) <-> ST_Centroid(the_geom_webmercator) ASC " +
 
-  " )" + //end 3rd
+//    log2      "abs("+
+//             "({{area_ratio_multiplier}} * abs(log(2, (0.000000000000001 + (St_area(St_transform(St_geomfromtext('{{bbox_wkt}}', 4326), 3857)))/area )::numeric))) "+
+            
+//            " + "+
+            
+//             "({{distance_ratio_multiplier}} * "+
+//             "log(2, (0.000000000000001 + " + 
+//               "St_distance("+
+//                 "St_centroid("+
+//                   "St_transform("+
+//                     "St_geomfromtext('{{bbox_wkt}}', 4326), 3857)), St_centroid(the_geom_webmercator))"+
+//                        "/ {{min_d}}"+
+//               ")::numeric)"+//log
+//             ")"+//clause2
+            
+//           ")"+//abs
 
-")" + //end parent
-
-" as foobar LIMIT {{per_page}} OFFSET {{offset}}";
-
-    // " UNION ALL (" + 
-
-//previous iterations
-    //bboxes with centroids falling within the viewport sorted by distance between
-    // "SELECT 2 as sort_order, cartodb_id FROM {{table_name}} WHERE" +
-    //   " ST_Centroid(the_geom) @ ST_GeomFromText('{{bbox_wkt}}'" + 
-    //   ", 4326) {{nonspatial_filters}}" +
-    //   " ORDER BY ST_Centroid(the_geom) <#> ST_GeomFromText('" + 
-    //   "{{bbox_wkt}}" + "', 4326))" +
+//  end log2 combined
 
 
+//           "abs("+
+//             "({{area_ratio_multiplier}} * abs(log(0.000000000000001 + (St_area(St_transform(St_geomfromtext('{{bbox_wkt}}', 4326), 3857)))/area))) "+
+                      
 
-      //experiment: cut out very small maps from results of those contained by viewport
-      // "SELECT 1 as sort_order, cartodb_id FROM {{table_name}} as b1 WHERE" +
-      // " ST_GeomFromText('{{bbox_wkt}}', 4326) ~ the_geom" + 
-      // " AND" +
-      // " ( area / " + 
-      // " ST_Area(ST_Transform(ST_GeomFromText('{{bbox_wkt}}', 4326), 3857)) > 0.1 )" + 
-      // " {{nonspatial_filters}} " + 
-      // "ORDER BY area DESC)" +
+//            " + "+
+            
+//             "({{distance_ratio_multiplier}} * "+
+//             "log(0.000000000000001 + " + 
+//               "St_distance("+
+//                 "St_centroid("+
+//                   "St_transform("+
+//                     "St_geomfromtext('{{bbox_wkt}}', 4326), 3857)), St_centroid(the_geom_webmercator))"+
+//                        "/ {{min_d}}"+
+//               ")"+//log
+//             ")"+//clause2
+            
+//           ")"+//abs
+//           " AS centroid_area_comb" +
+//           " FROM {{table_name}} WHERE" +
+//           " ST_GeomFromText('{{bbox_wkt}}', 4326) && ST_Centroid(the_geom)" +
+//           " AND "+
+
+//               "ST_Area("+
+//                   "ST_Intersection("+
+//                       "St_Transform("+
+//                             "St_geomfromtext('{{bbox_wkt}}', 4326)"+
+//                         ", 3857)"+
+//                       ", the_geom_webmercator))"+ //st_area
+//                     "/ st_area(the_geom_webmercator)"+
+//             "> 0.7"+
+//           " {{nonspatial_filters}}" + 
+//           " ORDER BY centroid_area_comb ASC" +
+//           " LIMIT {{per_page}} OFFSET {{offset}}";
+
+okm.filter.filter_rank_query_large_scale = 
+"SELECT"+
+    " cartodb_id"+
+
+" FROM okmaps WHERE "+
+    
+//from filter button and will eventually include text search
+" {{nonspatial_filters}}" + 
+
+" ST_GeomFromText('{{bbox_wkt}}', 4326) && the_geom "+
+
+// TODO add user sorting
+" ORDER BY"+
+ 
+" area ASC"+
+
+" LIMIT {{per_page}} OFFSET {{offset}}";
+
+okm.filter.filter_rank_query = 
+
+"SELECT"+
+    " cartodb_id"+
+
+" FROM okmaps WHERE "+
+
+//cut out maps less than 0.1% the area of our viewport 
+//ie would look very tiny
+" area > (0.001 * ST_Area("+
+    " St_Transform("+
+      " St_geomfromtext('{{bbox_wkt}}', 4326),"+
+      "3857))) AND "+
+
+//from filter button and will eventually include text search
+" {{nonspatial_filters}}" + 
+
+" ST_GeomFromText('{{bbox_wkt}}', 4326) && the_geom AND"+
+
+" ST_Area("+
+  " ST_Intersection("+
+    " St_Transform("+
+      " St_geomfromtext('{{bbox_wkt}}', 4326),"+
+    "3857),"+
+  " the_geom_webmercator))"+
+ 
+  "/ "+
+  " area  > {{overlap_percent}}"+
+   
+// TODO add user sorting
+" ORDER BY"+
+ 
+" area DESC"+
+
+" LIMIT {{per_page}} OFFSET {{offset}}";
+
 
 okm.text_search = {};
 okm.text_search.text_searching = false;
@@ -275,16 +363,23 @@ okm.G.MAPZEN_KEY = "mapzen-6dXEegt";
 okm.G.TABLE_NAME = "okmaps";
 okm.G.PER_PAGE = 10;
 okm.G.PAGE_NUMBER = 1;
-okm.G.QUERY_URL = "https://{username}.carto.com/api/v2/sql".replace("{username}", okm.G.CARTO_USER);
-okm.G.BASE_URL = "SELECT {fields} FROM {table_name}";
+okm.G.DEFAULT_BBOX_STRING = "-103.62304687500001,31.690781806136822,-93.40576171875001,39.57182223734374";
+okm.G.QUERY_URL = "https://{{username}}.carto.com/api/v2/sql".replace("{{username}}", okm.G.CARTO_USER);
+okm.G.BASE_URL = "SELECT {{fields}} FROM {{table_name}}";
 //okm.G.CDM_ROOT = "http://dc.library.okstate.edu";
 okm.G.CDM_ROOT = "https://cdm17279.contentdm.oclc.org";
 okm.G.REF_URL = okm.G.CDM_ROOT + "/cdm/ref/collection/OKMaps/id/";
 okm.G.IMG_URL = okm.G.CDM_ROOT + "/utils/ajaxhelper/?CISOROOT=OKMaps&CISOPTR={{contentdm_number}}&action=2&DMSCALE={{scale}}&DMWIDTH={{width}}&DMHEIGHT={{height}}&DMX=0&DMY=0&DMTEXT=&DMROTATE=0";
-okm.G.IIIF_URL = okm.G.CDM_ROOT + "/digital/iiif/OKMaps/{{contentdm_number}}/info.json";
+okm.G.IIIF_BASE_URL = okm.G.CDM_ROOT + "/digital/iiif/OKMaps/{{contentdm_number}}/";
+okm.G.IIIF_INFO_URL = okm.G.IIIF_BASE_URL + "info.json";
+okm.G.IIIF_MAX_URL = okm.G.IIIF_BASE_URL + "full/max/0/default.jpg";
+
+//max size url example
+//https://cdm17279.contentdm.oclc.org/digital/iiif/OKMaps/94/full/max/0/default.jpg
 okm.G.THUMBNAIL_URL = okm.G.CDM_ROOT + "/utils/getthumbnail/collection/OKMaps/id/";
-okm.G.MODAL_HEIGHT = Math.round($("#featureModal").height() * 0.6);
-okm.G.TABLE_FIELDS = ["the_geom", 
+okm.G.MODAL_HEIGHT = Math.round($("#featureModal").height() * 0.65);
+okm.G.TABLE_FIELDS = [
+  "the_geom", 
   "title", 
   "cartodb_id", 
   "original_date",
@@ -294,70 +389,8 @@ okm.G.TABLE_FIELDS = ["the_geom",
   //"img_height",
   "size"];
 okm.G.CARTO_URL = okm.G.BASE_URL
-    .replace("{table_name}", okm.G.TABLE_NAME)
-    .replace("{fields}", okm.G.TABLE_FIELDS.join(", "));
-
-okm.util.state_hash = {
-    'Alabama': 'AL',
-    'Alaska': 'AK',
-    'American Samoa': 'AS',
-    'Arizona': 'AZ',
-    'Arkansas': 'AR',
-    'California': 'CA',
-    'Colorado': 'CO',
-    'Connecticut': 'CT',
-    'Delaware': 'DE',
-    'District Of Columbia': 'DC',
-    'Federated States Of Micronesia': 'FM',
-    'Florida': 'FL',
-    'Georgia': 'GA',
-    'Guam': 'GU',
-    'Hawaii': 'HI',
-    'Idaho': 'ID',
-    'Illinois': 'IL',
-    'Indiana': 'IN',
-    'Iowa': 'IA',
-    'Kansas': 'KS',
-    'Kentucky': 'KY',
-    'Louisiana': 'LA',
-    'Maine': 'ME',
-    'Marshall Islands': 'MH',
-    'Maryland': 'MD',
-    'Massachusetts': 'MA',
-    'Michigan': 'MI',
-    'Minnesota': 'MN',
-    'Mississippi': 'MS',
-    'Missouri': 'MO',
-    'Montana': 'MT',
-    'Nebraska': 'NE',
-    'Nevada': 'NV',
-    'New Hampshire': 'NH',
-    'New Jersey': 'NJ',
-    'New Mexico': 'NM',
-    'New York': 'NY',
-    'North Carolina': 'NC',
-    'North Dakota': 'ND',
-    'Northern Mariana Islands': 'MP',
-    'Ohio': 'OH',
-    'Oklahoma': 'OK',
-    'Oregon': 'OR',
-    'Palau': 'PW',
-    'Pennsylvania': 'PA',
-    'Puerto Rico': 'PR',
-    'Rhode Island': 'RI',
-    'South Carolina': 'SC',
-    'South Dakota': 'SD',
-    'Tennessee': 'TN',
-    'Texas': 'TX',
-    'Utah': 'UT',
-    'Vermont': 'VT',
-    'Virgin Islands': 'VI',
-    'Virginia': 'VA',
-    'Washington': 'WA',
-    'West Virginia': 'WV',
-    'Wisconsin': 'WI',
-    'Wyoming': 'WY'
-  };
+    .replace("{{table_name}}", okm.G.TABLE_NAME)
+    .replace("{{fields}}", okm.G.TABLE_FIELDS.join(", "));
 
 okm.util.check_if_need_load = function(elem){
   if (elem.scrollHeight - elem.scrollTop === elem.clientHeight ||
@@ -738,7 +771,6 @@ okm.filter.get_input_values = function(elems){
 };
 
 
-
 okm.filter.init = function(features){
   okm.filter.collection(features);
   okm.filter.year(features);
@@ -749,9 +781,10 @@ function animateSidebar() {
   $("#sidebar").animate({
     width: "toggle"
   }, 350, function() {
-    map.invalidateSize({pan:false});
+   map.invalidateSize({pan:false});
   });
 }
+
 
 function sizeLayerControl() {
   $(".leaflet-control-layers").css("max-height", $("#map").height() - 50);
@@ -768,21 +801,55 @@ okm.sidebar.click = function(id) {
   }
 };
 
+okm.filter.get_overlap_pct_for_zoom = function(zoom){
+  if (zoom >= 13){
+    return 0.1
+  }
+  else {
+    return 0.8
+  }
+}
+
+//function buildFilterRankQuery(input_bounds, offset, min_d){
 function buildFilterRankQuery(input_bounds, offset){
+  var curr_zoom = okm.map.map_object.getZoom();
   var nonspatial_filters = okm.filter.build_where();
+  var overlap_percent = okm.filter.get_overlap_pct_for_zoom(curr_zoom);
   var bbox_wkt = okm.util.bboxStringToWKT(input_bounds.toBBoxString());
-  var url = okm.G.BASE_URL.replace("{username}", okm.G.CARTO_USER)
-    .replace("{table_name}", okm.G.TABLE_NAME)
-    .replace("{fields}", "cartodb_id");
-  var q = okm.filter.filter_rank_query
-    .replace(/{{bbox_wkt}}/g, bbox_wkt)
-    .replace(/{{nonspatial_filters}}/g, nonspatial_filters)
-    .replace(/{{table_name}}/g, okm.G.TABLE_NAME)
-    .replace(/{{offset}}/g, offset)
-    .replace(/{{per_page}}/g, okm.G.PER_PAGE);
+  var url = okm.G.BASE_URL.replace("{{username}}", okm.G.CARTO_USER)
+    .replace("{{table_name}}", okm.G.TABLE_NAME)
+    .replace("{{fields}}", "cartodb_id");
+  var q;
+  if (curr_zoom < 13){
+    q = okm.filter.filter_rank_query;
+  } 
+  else {
+    q = okm.filter.filter_rank_query_large_scale;
+  }
+
+  q = q.replace(/{{bbox_wkt}}/g, bbox_wkt)
+      // .replace(/{{min_d}}/g, min_d)
+      .replace(/{{overlap_percent}}/g, overlap_percent)
+      .replace(/{{distance_ratio_multiplier}}/g, "1")
+      .replace(/{{area_ratio_multiplier}}/g, "1")
+      .replace(/{{nonspatial_filters}}/g, nonspatial_filters)
+      .replace(/{{table_name}}/g, okm.G.TABLE_NAME)
+      .replace(/{{offset}}/g, offset)
+      .replace(/{{per_page}}/g, okm.G.PER_PAGE);
   return q;
 }
 
+// okm.filter.build_min_centroid_dist_query = function(bbox){
+//   var bbox_wkt = okm.util.bboxStringToWKT(bbox.toBBoxString());
+//   var query = okm.filter.min_centroid_dist_query
+//     .replace("{{table_name}}", okm.G.TABLE_NAME)
+//     .replace("{{bbox_wkt}}", bbox_wkt);
+//   return query;
+// }
+
+// okm.filter.get_min_centroid_dist = function(query){
+//   return okm.util.sql(query, function(d){return d.rows[0].min_d}, "json");
+// }
 
 okm.filter.build_where = function(properties){
   var years;
@@ -798,12 +865,12 @@ okm.filter.build_where = function(properties){
     switch (filters[i]){
 
       case "collection":
-        q = q + " AND collection in ('" + okm.filter.criteria.collection.join("','") + "') ";
+        q = q + "collection in ('" + okm.filter.criteria.collection.join("','") + "') AND ";
         break;
 
       case "original_date":
         years = okm.filter.criteria.original_date;
-        q = q + " AND original_date BETWEEN " + years[0] + " AND " + years[1] + " ";
+        q = q + "original_date BETWEEN " + years[0] + " AND " + years[1] + " AND ";
         break;
       case "size":
         break;
@@ -821,15 +888,19 @@ okm.search_carto = function(query){
     var len = lyrs.length;
     var rows = d.rows;
     var ld = rows.length;
-    console.log(ld + " rows");
+    //console.log(ld + " rows");
     var cdb_ids = [];
     var cdb_id;
 
-    var start, end;
-    start = performance.now();
+    //var start, end;
+    //start = performance.now();
     for (var i = 0; i < ld; i++){
-
       cdb_id = rows[i].cartodb_id;
+      //console.log("id: " + rows[i].cartodb_id);
+      //console.log("dist ratio: " + rows[i].distance_ratio);
+      // console.log("area ratio: " + rows[i].area_ratio);
+      // console.log("combined/weighted: " + rows[i].centroid_area_comb);
+      //console.log("---------");
       for (var j = 0; j < len; j++){
         l = lyrs[j];
         if (cdb_id == l.feature.properties.cartodb_id){
@@ -840,13 +911,14 @@ okm.search_carto = function(query){
           short_title = full_title.length > 50 ? short_title.substr(0, Math.min(short_title.length, short_title.lastIndexOf(" "))) + "..." : full_title;
           
           if (cdb_ids.indexOf(l.feature.properties.cartodb_id) === -1){
-             cdb_ids.push(l.feature.properties.cartodb_id);
+            cdb_ids.push(l.feature.properties.cartodb_id);
             featuresTemp.push({
               "cdm": l.feature.properties.contentdm_number,
               "carto": l.feature.properties.cartodb_id,
               "id": L.stamp(l),
               "bbox": l.getBounds().toBBoxString(),
               "feature-name": short_title,
+              "feature-name-hover": full_title,
               "feature-sort-name":l.feature.properties.original_date,
               "feature-thumbnail":okm.G.THUMBNAIL_URL + l.feature.properties.contentdm_number,
               "feature-row": full_title          
@@ -857,18 +929,32 @@ okm.search_carto = function(query){
       }
       
     }
-    end = performance.now();
-    console.log("matching by id:  "+ (end - start) + " milliseconds.");
+    //end = performance.now();
+    //console.log("matching by id:  "+ (end - start) + " milliseconds.");
     
   },"json");
 };
 
+// function filterRankFeatures(){
+//   //console.log("filterRankFeatures");
+//   var bbox = map.getBounds();
+//   var min_d_q = okm.filter.build_min_centroid_dist_query(bbox);
+//   return okm.filter.get_min_centroid_dist(min_d_q).then(function(d){
+//     var min_d = d.rows[0].min_d;
+//     console.log("Min distance: " + min_d);
+//     var q = buildFilterRankQuery(bbox, okm.util.get_offset(), min_d);
+//     return okm.search_carto(q);
+    
+//   });
+// }
+
 function filterRankFeatures(){
-  console.log("filterRankFeatures");
-  var bbox = map.getBounds();
+  // console.log("filterRankFeatures");
+  var bbox = okm.map.map_object.getBounds();
   var q = buildFilterRankQuery(bbox, okm.util.get_offset());
   return okm.search_carto(q);
 }
+
 
 
 function getBoundsArea(bounds){
@@ -880,7 +966,7 @@ function getBoundsArea(bounds){
 }
 
 function syncUrlHash(){
-  var loc = "loc="+map.getBounds().toBBoxString();
+  var loc = "loc="+ okm.map.map_object.getBounds().toBBoxString();
   location.hash = [loc].join("&");
 }
 
@@ -937,7 +1023,12 @@ okm.sidebar.more_results = function(){
 };
 
 okm.map.more_results = function(){
+   var start, end;
+  start = performance.now();
+  
   filterRankFeatures(okm.map.layers.okmaps).then(function(){
+    end = performance.now();
+    console.log("filterRankFeatures:  "+ (end - start) + " milliseconds.");
     featureList.add(featuresTemp);
     $("#loading").hide();
   }, function(err){
@@ -947,38 +1038,31 @@ okm.map.more_results = function(){
 };
 
 okm.sidebar.sync = function() {
-  console.log("okm.sidebar.sync");
-  var start,start2,end,end2;
+  //console.log("okm.sidebar.sync");
+  var start, end;
+  start = performance.now();
+  $("#loading").show();
 
-  /* Loop through theaters layer and add only features which are in the map bounds */
-  if (!timeline_added){
+  filterRankFeatures(okm.map.layers.okmaps).then(function(){
+
+    end = performance.now();
+    console.log("filterRankFeatures:  "+ (end - start) + " milliseconds.");
+
+    featureList.clear();
+    okm.sidebar.add_results();
+    $(".sidebar-table").scrollTop(0);
+    $("#loading").hide();
     
-      start = performance.now();
-      $("#loading").show();
-
-      filterRankFeatures(okm.map.layers.okmaps).then(function(){
-
-        featureList.clear();
-        okm.sidebar.add_results();
-        $(".sidebar-table").scrollTop(0);
-
-        end = performance.now();
-        console.log("3:  "+ (end - start) + " milliseconds.");
-        $("#loading").hide();
-      },function(err){
-        console.log(err);
-        $("#loading").hide();        
-      });  
-  }
-    else {
-      filterRankFeatures(timeline);
-    }
+  }, function(err){
+    console.log(err);
+    $("#loading").hide();        
+  });  
 };
 
 
 /* Attribution control */
 function updateAttribution(e) {
-  $.each(map._layers, function(index, layer) {
+  $.each(okm.map.map_object._layers, function(index, layer) {
     if (layer.getAttribution) {
       $("#attribution").html((layer.getAttribution()));
     }
@@ -1024,7 +1108,6 @@ function updateAttribution(e) {
   
   /* Empty layer placeholder to add to layer control for listening when to add/remove okmaps to markerClusters layer */
   okm.map.layers.okmapsLayer = L.geoJson(null);
-  //timelineLayer = L.geoJson(null);
   okm.map.layers.okmaps = L.geoJson(null, {
     style: function(feature){
       return {
@@ -1043,7 +1126,7 @@ function updateAttribution(e) {
         //                .replace("{{width}}", feature.properties.img_width/10)
         //                .replace("{{height}}", feature.properties.img_height/10)
         //                .replace("{{scale}}", 10);
-        var iiif_url = okm.G.IIIF_URL.replace("{{contentdm_number}}", feature.properties.contentdm_number);
+        var iiif_url = okm.G.IIIF_INFO_URL.replace("{{contentdm_number}}", feature.properties.contentdm_number);
         var iiif_div_id = "iiif-" + feature.properties.contentdm_number;
         var ref_url = okm.G.REF_URL + feature.properties.contentdm_number;
         var content = "<table class='table table-striped table-bordered table-condensed'>" +
@@ -1053,8 +1136,7 @@ function updateAttribution(e) {
           //"<div class='feature-modal-image-helper'><a target='_none' href='"+ ref_url+"'><img class='feature-img img-responsive' alt= '" + 
           //feature.properties.title.replace("'","&#39;")+ "'src='"+
           //img_url+"'/></a></div>"+
-          "<div class='iiif-map' id='" + iiif_div_id + "' style='width:auto;" + 
-           "height:"+ okm.G.MODAL_HEIGHT +"px';></div>"+
+          "<div class='iiif-map' id='" + iiif_div_id + "' style='width:auto;'></div>"+
           "</td></tr></table>";
 
         layer.on({
@@ -1064,6 +1146,7 @@ function updateAttribution(e) {
             $("#feature-info").html(content);
             //$("#featureModal img").on("load",function(){
             $("#loading").hide();
+            $(".iiif-map").css("height", Math.round($("#container").height() * 0.50) + "px");
             $("#featureModal").modal("show");
           
             okm.iiif.map = L.map(iiif_div_id,{
@@ -1085,14 +1168,14 @@ function updateAttribution(e) {
     }
   });
 
-  var init_bounds_str = okm.util.get_url_hash_object().loc || "-103.62304687500001,31.690781806136822,-93.40576171875001,39.57182223734374";
+  var init_bounds_str = okm.util.get_url_hash_object().loc || okm.G.DEFAULT_BBOX_STRING;
   var init_bounds = okm.util.bboxStringToLatLngBounds(init_bounds_str);
-  map = L.map("map", {
+  okm.map.map_object = L.map("map", {
     layers: [okm.map.layers.street, okm.map.layers.okmapsLayer, okm.map.layers.highlight],
     zoomControl: false,
     attributionControl: false
   });
-  map.fitBounds(init_bounds);
+  okm.map.map_object.fitBounds(init_bounds);
  
 
 var searchControl = L.control.geocoder(okm.G.MAPZEN_KEY, {
@@ -1105,14 +1188,14 @@ var searchControl = L.control.geocoder(okm.G.MAPZEN_KEY, {
 
  
   /* Layer control listeners that allow for a single markerClusters layer */
-  map.on("overlayadd", function(e) {
+  okm.map.map_object.on("overlayadd", function(e) {
     if (e.layer === okm.map.layers.okmapsLayer) {
       //markerClusters.addLayer(okmaps);
       okm.sidebar.sync();
     }
   });
 
-  map.on("overlayremove", function(e) {
+  okm.map.map_object.on("overlayremove", function(e) {
     if (e.layer === okm.map.layers.okmapsLayer) {
       //markerClusters.removeLayer(okmaps);
       okm.sidebar.sync();
@@ -1120,7 +1203,7 @@ var searchControl = L.control.geocoder(okm.G.MAPZEN_KEY, {
   });
 
   /* Filter sidebar feature list to only show features in current map bounds */
-  map.on("moveend", function (e) {
+  okm.map.map_object.on("moveend", function (e) {
     okm.G.PAGE_NUMBER = 1;
     if (okm.util.autosearch_status()){
       okm.sidebar.sync();
@@ -1129,7 +1212,7 @@ var searchControl = L.control.geocoder(okm.G.MAPZEN_KEY, {
   });
 
   /* Clear feature highlight when map is clicked */
-  map.on("click", function(e) {
+  okm.map.map_object.on("click", function(e) {
     okm.map.layers.highlight.clearLayers();
   });
 
@@ -1165,12 +1248,12 @@ var searchControl = L.control.geocoder(okm.G.MAPZEN_KEY, {
       });
     });
 
-    map.addLayer(okm.map.layers.okmapsLayer);
-    map.fire("moveend");
+    okm.map.map_object.addLayer(okm.map.layers.okmapsLayer);
+    okm.map.map_object.fire("moveend");
   });
 
-  map.on("layeradd", updateAttribution);
-  map.on("layerremove", updateAttribution);
+  okm.map.map_object.on("layeradd", updateAttribution);
+  okm.map.map_object.on("layerremove", updateAttribution);
 
   var attributionControl = L.control({
     position: "bottomright"
@@ -1184,7 +1267,7 @@ var searchControl = L.control.geocoder(okm.G.MAPZEN_KEY, {
 
   var zoomControl = L.control.zoom({
     position: "bottomright"
-  }).addTo(map);
+  }).addTo(okm.map.map_object);
 
   /* GPS enabled geolocation control set to follow the user's location */
   var locateControl = L.control.locate({
@@ -1216,7 +1299,7 @@ var searchControl = L.control.geocoder(okm.G.MAPZEN_KEY, {
       maximumAge: 10000,
       timeout: 10000
     }
-  }).addTo(map);
+  }).addTo(okm.map.map_object);
   
   var isCollapsed;
   /* Larger screens get expanded layer control and visible sidebar */
@@ -1240,9 +1323,9 @@ var searchControl = L.control.geocoder(okm.G.MAPZEN_KEY, {
 
   var layerControl = L.control.groupedLayers(baseLayers, groupedOverlays, {
     collapsed: isCollapsed
-  }).addTo(map);
+  }).addTo(okm.map.map_object);
 
-  searchControl.addTo(map);
+  searchControl.addTo(okm.map.map_object);
   var searchIcon = $(searchControl.getContainer())
     .find("a")
     .attr("title", "Search for a place.")
@@ -1261,12 +1344,12 @@ L.Control.UpdateSearchCheckbox = L.Control.extend({
   
   onAdd: function(map){
     var div = L.DomUtil.create("div");
-    var content = '<div class="autosearch" data-step="4" data-intro="Uncheck this to prevent results from changing when you move the map.">'+
+    var content = '<div  class="autosearch" data-step="4" data-intro="Uncheck this to prevent results from changing when you move the map.">'+
                     '<input id="search-on-map-move" checked="" type="checkbox">'+
-                    '<label for="search-on-map-move"> Redo search when I move the map</label>'+
+                    '<label class="disable-text-selection" for="search-on-map-move"> Redo search when I move the map</label>'+
                   '</div>';
     div.innerHTML = content;
-
+    L.DomEvent.disableClickPropagation(div);
     return div;
   },
 
@@ -1281,4 +1364,4 @@ L.control.updatesearchcheckbox = function(opts){
 
 }
 
-L.control.updatesearchcheckbox({position: "topleft"}).addTo(map);
+L.control.updatesearchcheckbox({position: "topleft"}).addTo(okm.map.map_object);
