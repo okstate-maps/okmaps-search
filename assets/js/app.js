@@ -53,7 +53,6 @@ L.TileLayer.WMTS = L.TileLayer.extend({
         var nw = this._crs.project(this._map.unproject(nwPoint, zoom));
         var se = this._crs.project(this._map.unproject(sePoint, zoom));
         tilewidth = se.x-nw.x;
-        //zoom = this._map.getZoom();
         var ident = this.matrixIds[zoom].identifier;
         var X0 = this.matrixIds[zoom].topLeftCorner.lng;
         var Y0 = this.matrixIds[zoom].topLeftCorner.lat;
@@ -61,21 +60,6 @@ L.TileLayer.WMTS = L.TileLayer.extend({
         var tilerow=-Math.floor((nw.y-Y0)/tilewidth);
         var url = L.Util.template(this._url, {s: this._getSubdomain(coords)});
         return url + L.Util.getParamString(this.wmtsParams, url) + "&tilematrix=" + ident + "&tilerow=" + tilerow +"&tilecol=" + tilecol ;
-        /*
-        var tileBounds = this._tileCoordsToBounds(coords);
-        var zoom = this._tileZoom;
-        var nw = this._crs.project(tileBounds.getNorthWest());
-        var se = this._crs.project(tileBounds.getSouthEast());
-        var tilewidth = se.x-nw.x;
-        var ident = this.matrixIds[zoom].identifier;
-        var X0 = this.matrixIds[zoom].topLeftCorner.lng;
-        var Y0 = this.matrixIds[zoom].topLeftCorner.lat;
-        var tilecol=Math.floor((nw.x+1-X0)/tilewidth);
-        var tilerow=-Math.floor((nw.y-1-Y0)/tilewidth);
-        var url = L.Util.template(this._url, {s: this._getSubdomain(coords)});
-        console.log(L.Util.getParamString(this.wmtsParams, url) + "&tilematrix=" + ident + "&tilerow=" + tilerow +"&tilecol=" + tilecol );
-        return url + L.Util.getParamString(this.wmtsParams, url) + "&tilematrix=" + ident + "&tilerow=" + tilerow +"&tilecol=" + tilecol ;
-        */
     },
 
     setParams: function (params, noRedraw) {
@@ -105,6 +89,8 @@ L.TileLayer.WMTS = L.TileLayer.extend({
 L.tileLayer.wmts = function (url, options) {
     return new L.TileLayer.WMTS(url, options);
 };
+
+
 
 //Object.keys polyfill
 // From https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/keys
@@ -171,132 +157,6 @@ okm.filter = {};
 //criteria obj keys must correspond to table fields
 okm.filter.criteria = {};
 
-//how to rank search results gets handled in this thing
-
-//okm.filter.filter_rank_query = "SELECT cartodb_id, sort_order from " + //parent wrapper
-
-// okm.filter.min_centroid_dist_query = 
-//         "select MIN("+
-//            "ST_Distance("+
-//             "ST_Centroid("+
-//               "ST_Transform("+
-//                 "ST_GeomFromText("+
-//                   "'{{bbox_wkt}}', 4326"+
-//                   "), 3857"+
-//                 ")"+
-//               "), ST_Centroid("+
-//                 "the_geom_webmercator"+
-//               ")"+
-//               ") "+
-//           ") as min_d from {{table_name}}";
-
-// okm.filter.filter_rank_query = 
-
-//           "SELECT cartodb_id, "+
-            
-//        "(1 * abs(log(2.0, (0.000000000000001 + (St_area(St_transform(St_geomfromtext('{{bbox_wkt}}', 4326), 3857)))/area )::numeric))) as area_ratio,"+
-//  log2 area
-
-//      "(1 * abs(log(0.000000000000001 + (St_area(St_transform(St_geomfromtext('{{bbox_wkt}}', 4326), 3857)))/area))) as area_ratio,"+
-    
-//   end log2 area
-
-//   log2
-
-//           "(1 * "+
-//             "log(2.0, (0.000000000000001 + " + 
-//               "St_distance("+
-//                 "St_centroid("+
-//                   "St_transform("+
-//                     "St_geomfromtext('{{bbox_wkt}}', 4326), 3857)), St_centroid(the_geom_webmercator))"+
-//                        "/ {{min_d}}"+
-//               ")::numeric)"+//log
-//             ") as distance_ratio, "+//clause2
-
-// end log2 distance
-          
-//           "(1 * "+
-//             "log(0.000000000000001 + " + 
-//               "St_distance("+
-//                 "St_centroid("+
-//                   "St_transform("+
-//                     "St_geomfromtext('{{bbox_wkt}}', 4326), 3857)), St_centroid(the_geom_webmercator))"+
-//                        "/ {{min_d}}"+
-//               ")"+//log
-//             ") as distance_ratio, "+//clause2
-  
-
-//    log2      "abs("+
-//             "({{area_ratio_multiplier}} * abs(log(2, (0.000000000000001 + (St_area(St_transform(St_geomfromtext('{{bbox_wkt}}', 4326), 3857)))/area )::numeric))) "+
-            
-//            " + "+
-            
-//             "({{distance_ratio_multiplier}} * "+
-//             "log(2, (0.000000000000001 + " + 
-//               "St_distance("+
-//                 "St_centroid("+
-//                   "St_transform("+
-//                     "St_geomfromtext('{{bbox_wkt}}', 4326), 3857)), St_centroid(the_geom_webmercator))"+
-//                        "/ {{min_d}}"+
-//               ")::numeric)"+//log
-//             ")"+//clause2
-            
-//           ")"+//abs
-
-//  end log2 combined
-
-
-//           "abs("+
-//             "({{area_ratio_multiplier}} * abs(log(0.000000000000001 + (St_area(St_transform(St_geomfromtext('{{bbox_wkt}}', 4326), 3857)))/area))) "+
-                      
-
-//            " + "+
-            
-//             "({{distance_ratio_multiplier}} * "+
-//             "log(0.000000000000001 + " + 
-//               "St_distance("+
-//                 "St_centroid("+
-//                   "St_transform("+
-//                     "St_geomfromtext('{{bbox_wkt}}', 4326), 3857)), St_centroid(the_geom_webmercator))"+
-//                        "/ {{min_d}}"+
-//               ")"+//log
-//             ")"+//clause2
-            
-//           ")"+//abs
-//           " AS centroid_area_comb" +
-//           " FROM {{table_name}} WHERE" +
-//           " ST_GeomFromText('{{bbox_wkt}}', 4326) && ST_Centroid(the_geom)" +
-//           " AND "+
-
-//               "ST_Area("+
-//                   "ST_Intersection("+
-//                       "St_Transform("+
-//                             "St_geomfromtext('{{bbox_wkt}}', 4326)"+
-//                         ", 3857)"+
-//                       ", the_geom_webmercator))"+ //st_area
-//                     "/ st_area(the_geom_webmercator)"+
-//             "> 0.7"+
-//           " {{nonspatial_filters}}" + 
-//           " ORDER BY centroid_area_comb ASC" +
-//           " LIMIT {{per_page}} OFFSET {{offset}}";
-
-okm.filter.filter_rank_query_large_scale = 
-"SELECT"+
-    " cartodb_id"+
-
-" FROM okmaps WHERE "+
-    
-//from filter button and will eventually include text search
-" {{nonspatial_filters}}" + 
-
-" ST_GeomFromText('{{bbox_wkt}}', 4326) && the_geom "+
-
-// TODO add user sorting
-" ORDER BY"+
- 
-" area ASC"+
-
-" LIMIT {{per_page}} OFFSET {{offset}}";
 
 okm.filter.filter_rank_query = 
 
@@ -315,22 +175,48 @@ okm.filter.filter_rank_query =
 //from filter button and will eventually include text search
 " {{nonspatial_filters}}" + 
 
-" ST_GeomFromText('{{bbox_wkt}}', 4326) && the_geom AND"+
+//" ST_GeomFromText('{{bbox_wkt}}', 4326) && the_geom AND"+
+" ST_GeomFromText('{{bbox_wkt}}', 4326) && the_geom"+
 
-" ST_Area("+
+" ORDER BY "+
+//area of overlap
+"("+
+
+"("+
+  "ST_Area("+
   " ST_Intersection("+
     " St_Transform("+
       " St_geomfromtext('{{bbox_wkt}}', 4326),"+
-    "3857),"+
-  " the_geom_webmercator))"+
+      "3857),"+
+  " the_geom_webmercator)"+
+  ")"+
+  "/ area ) + "+
+  //"(area_of_overlap.area_overlap / area)  + "+
+
+" (ST_Area("+
+  " ST_Intersection("+
+    " St_Transform("+
+      " St_geomfromtext('{{bbox_wkt}}', 4326),"+
+      "3857),"+
+  " the_geom_webmercator)"+
+  ") / "+
  
-  "/ "+
-  " area  > {{overlap_percent}}"+
+//  "( area_of_overlap.area_overlap / ("+
+  " ST_Area("+
+    " St_Transform("+
+      " St_geomfromtext('{{bbox_wkt}}', 4326),"+
+      "3857))"+
+      ")"+
+   // ")"+
+  ") DESC"+
+  //" DESC"+
+
+ 
+  //" area  > {{overlap_percent}}"+
    
 // TODO add user sorting
-" ORDER BY"+
  
-" area DESC"+
+//" area DESC"+
 
 " LIMIT {{per_page}} OFFSET {{offset}}";
 
@@ -353,6 +239,10 @@ okm.map.layers = {};
 okm.map.styles = {};
 okm.map.styles.highlight = {
         color: "#ff7300",
+        weight: 1
+      };
+okm.map.styles.bounds_rectangle = {
+        color: "#8e8e8e",
         weight: 1
       };
 
@@ -494,6 +384,23 @@ okm.util.get_url_hash_object = function (){
   return a;
 };
 
+//Assymmetric bounds pad function derived from bounds.pad
+okm.util.assymmetric_pad = function (bounds, heightBufferRatio, widthBufferRatio) {
+  var sw = bounds._southWest,
+    ne = bounds._northEast,
+    hbr = heightBufferRatio || -0.2,
+    wbr = widthBufferRatio || -0.1,
+    heightBuffer,
+    widthBuffer;
+  
+  heightBuffer = Math.abs(sw.lat - ne.lat) * hbr;
+  widthBuffer = Math.abs(sw.lng - ne.lng) * wbr;
+  //debugger;
+  return new L.LatLngBounds(
+    new L.LatLng(sw.lat - heightBuffer, sw.lng - widthBuffer),
+    new L.LatLng(ne.lat + heightBuffer, ne.lng + widthBuffer));
+}
+
 
 $(window).resize(function() {
   sizeLayerControl();
@@ -629,6 +536,7 @@ $("#input_text_search").on("keypress",function(e){
 $(".sidebar-table").scroll(_.throttle(function(){
   okm.util.check_if_need_load(this);
 }, 300));
+
 
 
 okm.text_search.click = function(){
@@ -801,35 +709,16 @@ okm.sidebar.click = function(id) {
   }
 };
 
-okm.filter.get_overlap_pct_for_zoom = function(zoom){
-  if (zoom >= 13){
-    return 0.1
-  }
-  else {
-    return 0.8
-  }
-}
-
 //function buildFilterRankQuery(input_bounds, offset, min_d){
 function buildFilterRankQuery(input_bounds, offset){
-  var curr_zoom = okm.map.map_object.getZoom();
   var nonspatial_filters = okm.filter.build_where();
-  var overlap_percent = okm.filter.get_overlap_pct_for_zoom(curr_zoom);
   var bbox_wkt = okm.util.bboxStringToWKT(input_bounds.toBBoxString());
   var url = okm.G.BASE_URL.replace("{{username}}", okm.G.CARTO_USER)
     .replace("{{table_name}}", okm.G.TABLE_NAME)
     .replace("{{fields}}", "cartodb_id");
-  var q;
-  if (curr_zoom < 13){
-    q = okm.filter.filter_rank_query;
-  } 
-  else {
-    q = okm.filter.filter_rank_query_large_scale;
-  }
+  var q = okm.filter.filter_rank_query;
 
   q = q.replace(/{{bbox_wkt}}/g, bbox_wkt)
-      // .replace(/{{min_d}}/g, min_d)
-      .replace(/{{overlap_percent}}/g, overlap_percent)
       .replace(/{{distance_ratio_multiplier}}/g, "1")
       .replace(/{{area_ratio_multiplier}}/g, "1")
       .replace(/{{nonspatial_filters}}/g, nonspatial_filters)
@@ -950,7 +839,8 @@ okm.search_carto = function(query){
 
 function filterRankFeatures(){
   // console.log("filterRankFeatures");
-  var bbox = okm.map.map_object.getBounds();
+  //var bbox = okm.map.map_object.getBounds();
+  var bbox = okm.util.assymmetric_pad(okm.map.map_object.getBounds());
   var q = buildFilterRankQuery(bbox, okm.util.get_offset());
   return okm.search_carto(q);
 }
@@ -1173,7 +1063,8 @@ function updateAttribution(e) {
   okm.map.map_object = L.map("map", {
     layers: [okm.map.layers.street, okm.map.layers.okmapsLayer, okm.map.layers.highlight],
     zoomControl: false,
-    attributionControl: false
+    attributionControl: false,
+    renderer: L.svg({ padding: 100 }) // so search rectangle doesn't get clipped during dragging
   });
   okm.map.map_object.fitBounds(init_bounds);
  
@@ -1199,6 +1090,29 @@ var searchControl = L.control.geocoder(okm.G.MAPZEN_KEY, {
     if (e.layer === okm.map.layers.okmapsLayer) {
       //markerClusters.removeLayer(okmaps);
       okm.sidebar.sync();
+    }
+  });
+
+  okm.map.map_object.on("dragstart", function (e) {
+    var b = okm.util.assymmetric_pad(this.getBounds());
+    okm.map.bounds_rectangle = L.rectangle(b, okm.map.styles.bounds_rectangle);
+    okm.map.bounds_rectangle.addTo(okm.map.map_object);
+
+    okm.map.map_object.on("drag", function (e) {
+      var b = okm.util.assymmetric_pad(this.getBounds());
+      okm.map.bounds_rectangle.setBounds(b);
+    });
+
+});
+
+
+  okm.map.map_object.on("dragend", function (e) {
+    if (okm.map.bounds_rectangle){
+      okm.map.map_object.off("drag", function (e) {
+        var b = okm.util.assymmetric_pad(this.getBounds());
+        okm.map.bounds_rectangle.setBounds(b);
+      }); 
+      okm.map.bounds_rectangle.removeFrom(okm.map.map_object);
     }
   });
 
