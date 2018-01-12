@@ -285,15 +285,12 @@ Geolocation
 /*
 Geocoder
 */
-.leaflet-pelias-control {
-  width: 36px;
-  height: 36px;
-  line-height: 36px; }
-
-.leaflet-touch .leaflet-pelias-control {
+.leaflet-control-geocoder-icon, .leaflet-touch .leaflet-control-geocoder-icon {
   width: 44px;
-  height: 44px;
-  line-height: 44px; }
+  height: 44px; }
+
+.leaflet-control-geocoder-icon {
+  background-image: none; }
 
 .leaflet-touch .leaflet-pelias-input {
   padding-left: 41px; }

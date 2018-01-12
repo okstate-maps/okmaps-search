@@ -92,6 +92,10 @@ L.tileLayer.wmts = function (url, options) {
 
 
 
+
+
+
+
 //Object.keys polyfill
 // From https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/keys
 if (!Object.keys) {
@@ -165,13 +169,6 @@ okm.filter.filter_rank_query =
 
 " FROM okmaps WHERE "+
 
-//cut out maps less than 0.1% the area of our viewport 
-//ie would look very tiny
-" area > (0.001 * ST_Area("+
-    " St_Transform("+
-      " St_geomfromtext('{{bbox_wkt}}', 4326),"+
-      "3857))) AND "+
-
 //from filter button and will eventually include text search
 " {{nonspatial_filters}}" + 
 
@@ -181,42 +178,46 @@ okm.filter.filter_rank_query =
 " ORDER BY "+
 //area of overlap
 "("+
+  "  ST_Area("+
+  "    CASE"+
+  "      WHEN ST_Contains(  St_Transform(St_geomfromtext('{{bbox_wkt}}', 4326),3857), the_geom_webmercator)"+
+  "        THEN the_geom_webmercator"+
+  "      WHEN ST_Within(  St_Transform(St_geomfromtext('{{bbox_wkt}}', 4326),3857), the_geom_webmercator)"+
+  "        THEN St_Transform(St_geomfromtext('{{bbox_wkt}}', 4326),3857)"+
+  "      ELSE"+
+  "         ST_Intersection("+
+  "             St_Transform(St_geomfromtext('{{bbox_wkt}}', 4326),3857),"+
+  "             the_geom_webmercator"+
+  "         ) "+ //st_intersection
+        " END "+  //CASE
+  ")"+//st_area
 
-"("+
-  "ST_Area("+
-  " ST_Intersection("+
-    " St_Transform("+
-      " St_geomfromtext('{{bbox_wkt}}', 4326),"+
-      "3857),"+
-  " the_geom_webmercator)"+
-  ")"+
-  "/ area ) + "+
-  //"(area_of_overlap.area_overlap / area)  + "+
+  " / area ) "+
 
-" (ST_Area("+
-  " ST_Intersection("+
-    " St_Transform("+
-      " St_geomfromtext('{{bbox_wkt}}', 4326),"+
-      "3857),"+
-  " the_geom_webmercator)"+
-  ") / "+
- 
-//  "( area_of_overlap.area_overlap / ("+
-  " ST_Area("+
-    " St_Transform("+
-      " St_geomfromtext('{{bbox_wkt}}', 4326),"+
-      "3857))"+
-      ")"+
-   // ")"+
-  ") DESC"+
-  //" DESC"+
+  "+ "+
+  
+  " (ST_Area("+
+  "   CASE"+
+  "      WHEN ST_Contains(  St_Transform(St_geomfromtext('{{bbox_wkt}}', 4326),3857), the_geom_webmercator)"+
+  "        THEN the_geom_webmercator"+
+  "      WHEN ST_Within(  St_Transform(St_geomfromtext('{{bbox_wkt}}', 4326),3857), the_geom_webmercator)"+
+  "        THEN   St_Transform(St_geomfromtext('{{bbox_wkt}}', 4326),3857)"+
+  "      ELSE"+
+  "         ST_Intersection("+
+  "             St_Transform(St_geomfromtext('{{bbox_wkt}}', 4326),3857),"+
+  "         the_geom_webmercator"+
+  "      ) "+ //st_intersection
+      " END "+  //CASE
+  "  )"+  //st_area" 
+  "   / "+
+  "   ST_Area("+
+  "     St_Transform("+
+  "       St_geomfromtext('{{bbox_wkt}}', 4326),"+
+  "      3857))"+
 
- 
-  //" area  > {{overlap_percent}}"+
-   
+  "  ) DESC"+
+
 // TODO add user sorting
- 
-//" area DESC"+
 
 " LIMIT {{per_page}} OFFSET {{offset}}";
 
@@ -239,6 +240,10 @@ okm.map.layers = {};
 okm.map.styles = {};
 okm.map.styles.highlight = {
         color: "#ff7300",
+        weight: 1
+      };
+okm.map.styles.geocode = {
+        color: "#37b6e5",
         weight: 1
       };
 okm.map.styles.bounds_rectangle = {
@@ -362,18 +367,32 @@ okm.util.bboxStringToWKT = function(bbox_str){
    "," + bb[0] + " " + bb[1] + "))";
 };
 
+
+/**
+  Unchecks the checkbox that determines if the map results are refreshed on pan/zoom.
+*/
 okm.util.autosearch_off = function(){
   $("#search-on-map-move").get()[0].checked = false;
 };
 
+
+/**
+  Checks the checkbox that determines if the map results are refreshed on pan/zoom.
+*/
 okm.util.autosearch_on = function(){
   $("#search-on-map-move").get()[0].checked = true;
 };
 
+/**
+  Returns the current state of the checkbox that determines if the map results are refreshed on pan/zoom.
+*/
 okm.util.autosearch_status = function(){
   return $("#search-on-map-move").get()[0].checked;
 };
 
+/**
+  Returns the contents of the URL hash, split into key/value pairs
+*/
 okm.util.get_url_hash_object = function (){
   var a = {}, i;
   var h = location.hash.slice(1).split("&");
@@ -384,7 +403,10 @@ okm.util.get_url_hash_object = function (){
   return a;
 };
 
-//Assymmetric bounds pad function derived from bounds.pad
+/**
+  Assymmetric bounds pad function derived from bounds.pad. By default, makes a
+  bounds that is wider than it is high.
+*/
 okm.util.assymmetric_pad = function (bounds, heightBufferRatio, widthBufferRatio) {
   var sw = bounds._southWest,
     ne = bounds._northEast,
@@ -406,6 +428,9 @@ $(window).resize(function() {
   sizeLayerControl();
 });
 
+/**
+  Click handler to route clicks on the map results table to trigger a click on the correct row.
+*/
 $(document).on("click", ".feature-row", function(e) {
   okm.sidebar.click(parseInt($(this).data("id"), 10));
 });
@@ -472,12 +497,14 @@ $("#sidebar-size-decrease").click(function(){
   }
 });
 
+//unused atm
 $("#legend-btn").click(function() {
   $("#legendModal").modal("show");
   $(".navbar-collapse.in").collapse("hide");
   return false;
 });
 
+//unused atm
 $("#login-btn").click(function() {
   $("#loginModal").modal("show");
   $(".navbar-collapse.in").collapse("hide");
@@ -1068,14 +1095,127 @@ function updateAttribution(e) {
   });
   okm.map.map_object.fitBounds(init_bounds);
  
+//geocoding
+  var searchControl = new L.Control.Geocoder({
+    geocoder: L.Control.Geocoder.mapbox(okm.G.MB_TOKEN),
+    defaultMarkGeocode: false
+  }).on('markgeocode', function(e) {
+        var bbox = e.geocode.bbox;
+        var poly = L.polygon([
+             bbox.getSouthEast(),
+             bbox.getNorthEast(),
+             bbox.getNorthWest(),
+             bbox.getSouthWest()
+        ],
+          okm.map.styles.geocode
+        );
+        poly.on("click", function(){
+          poly.removeFrom(okm.map.map_object);
+        });
+        poly.addTo(okm.map.map_object);
+        okm.map.map_object.fitBounds(poly.getBounds());
+  });
 
-var searchControl = L.control.geocoder(okm.G.MAPZEN_KEY, {
-  position: "topright",
-  fullWidth: 400,
-  placeholder: null,
-  autocomplete: false,
-  title: "Search for a place."
-});
+searchControl.onAdd = function (map) {
+      var className = 'leaflet-control-geocoder',
+          container = L.DomUtil.create('div', className + ' leaflet-bar'),
+          icon = L.DomUtil.create('button', className + '-icon', container),
+          form = this._form = L.DomUtil.create('div', className + '-form', container),
+          input;
+
+      this._map = map;
+      this._container = container;
+
+      icon.innerHTML = '<i class="fa fa-map-signs fa-2x"></i>';
+      icon.type = 'button';
+
+      input = this._input = L.DomUtil.create('input', '', form);
+      input.type = 'text';
+      input.placeholder = this.options.placeholder;
+
+      this._errorElement = L.DomUtil.create('div', className + '-form-no-error', container);
+      this._errorElement.innerHTML = this.options.errorMessage;
+
+      this._alts = L.DomUtil.create('ul',
+        className + '-alternatives leaflet-control-geocoder-alternatives-minimized',
+        container);
+      L.DomEvent.disableClickPropagation(this._alts);
+
+      L.DomEvent.addListener(input, 'keydown', this._keydown, this);
+      if (this.options.geocoder.suggest) {
+        L.DomEvent.addListener(input, 'input', this._change, this);
+      }
+      L.DomEvent.addListener(input, 'blur', function() {
+        if (this.options.collapsed && !this._preventBlurCollapse) {
+          this._collapse();
+        }
+        this._preventBlurCollapse = false;
+      }, this);
+
+
+      if (this.options.collapsed) {
+        if (this.options.expand === 'click') {
+          L.DomEvent.addListener(container, 'click', function(e) {
+            if (e.button === 0 && e.detail !== 2) {
+              this._toggle();
+            }
+          }, this);
+        }
+        //else if (L.Browser.touch && this.options.expand === 'touch') {
+        else {
+          L.DomEvent.addListener(container, 'touchstart mousedown', function(e) {
+            this._toggle();
+            e.preventDefault(); // mobile: clicking focuses the icon, so UI expands and immediately collapses
+            e.stopPropagation();
+          }, this);
+        }
+        // else {
+        //   L.DomEvent.addListener(container, 'mouseover', this._expand, this);
+        //   L.DomEvent.addListener(container, 'mouseout', this._collapse, this);
+        //   this._map.on('movestart', this._collapse, this);
+        // }
+      } else {
+        this._expand();
+        if (L.Browser.touch) {
+          L.DomEvent.addListener(container, 'touchstart', function(e) {
+            this._geocode(e);
+          }, this);
+        }
+        else {
+          L.DomEvent.addListener(container, 'click', function(e) {
+            this._geocode(e);
+          }, this);
+        }
+      }
+
+      if (this.options.defaultMarkGeocode) {
+        this.on('markgeocode', this.markGeocode, this);
+      }
+
+      this.on('startgeocode', function() {
+        L.DomUtil.addClass(this._container, 'leaflet-control-geocoder-throbber');
+      }, this);
+      this.on('finishgeocode', function() {
+        L.DomUtil.removeClass(this._container, 'leaflet-control-geocoder-throbber');
+      }, this);
+
+      L.DomEvent.disableClickPropagation(container);
+
+      return container;
+    }
+
+searchControl.addTo(okm.map.map_object);
+//debugger;
+
+
+      
+// var searchControl = L.control.geocoder(okm.G.MAPZEN_KEY, {
+//   position: "topright",
+//   fullWidth: 400,
+//   placeholder: null,
+//   autocomplete: false,
+//   title: "Search for a place."
+// });
 
  
   /* Layer control listeners that allow for a single markerClusters layer */
@@ -1239,11 +1379,12 @@ var searchControl = L.control.geocoder(okm.G.MAPZEN_KEY, {
     collapsed: isCollapsed
   }).addTo(okm.map.map_object);
 
-  searchControl.addTo(okm.map.map_object);
-  var searchIcon = $(searchControl.getContainer())
-    .find("a")
-    .attr("title", "Search for a place.")
-    .wrapInner("<span class='fa-stack fa-lg' style='right:3px;bottom:3px;'><i class='fal fa-search fa-stack-2x' style='left:3px;top:2px;'></i><i class='fas fa-map-marker-alt fa-stack-1x'></i></span>");
+  // geocoding
+   searchControl.addTo(okm.map.map_object);
+  // var searchIcon = $(searchControl.getContainer())
+  //   .find("a")
+  //   .attr("title", "Search for a place.")
+  //   .wrapInner("<span class='fa-stack fa-lg' style='right:3px;bottom:3px;'><i class='fal fa-search fa-stack-2x' style='left:3px;top:2px;'></i><i class='fas fa-map-marker-alt fa-stack-1x'></i></span>");
    
    $("#input_text_search").addClear({
       symbolClass: "far fa-times-circle",
