@@ -167,7 +167,7 @@ okm.filter.filter_rank_query =
 "SELECT"+
     " cartodb_id"+
 
-" FROM okmaps WHERE "+
+" FROM {{table_name}} WHERE "+
 
 //from filter button and will eventually include text search
 " {{nonspatial_filters}}" + 
@@ -178,37 +178,42 @@ okm.filter.filter_rank_query =
 " ORDER BY "+
 //area of overlap
 "("+
-  "  ST_Area("+
+  //"  ST_Area("+
   "    CASE"+
   "      WHEN ST_Contains(  St_Transform(St_geomfromtext('{{bbox_wkt}}', 4326),3857), the_geom_webmercator)"+
-  "        THEN the_geom_webmercator"+
+  //"        THEN the_geom_webmercator"+
+  "        THEN area"+
   "      WHEN ST_Within(  St_Transform(St_geomfromtext('{{bbox_wkt}}', 4326),3857), the_geom_webmercator)"+
-  "        THEN St_Transform(St_geomfromtext('{{bbox_wkt}}', 4326),3857)"+
+  "        THEN ST_Area(St_Transform(St_geomfromtext('{{bbox_wkt}}', 4326),3857))"+
   "      ELSE"+
-  "         ST_Intersection("+
+  "         ST_Area(ST_Intersection("+
   "             St_Transform(St_geomfromtext('{{bbox_wkt}}', 4326),3857),"+
   "             the_geom_webmercator"+
   "         ) "+ //st_intersection
+  "         ) "+ // last st_area
         " END "+  //CASE
-  ")"+//st_area
+  //")"+//st_area
 
   " / area ) "+
 
   "+ "+
   
-  " (ST_Area("+
+  //" (ST_Area("+
+  " ("+
   "   CASE"+
   "      WHEN ST_Contains(  St_Transform(St_geomfromtext('{{bbox_wkt}}', 4326),3857), the_geom_webmercator)"+
-  "        THEN the_geom_webmercator"+
+  //"        THEN the_geom_webmercator"+
+  "        THEN area"+
   "      WHEN ST_Within(  St_Transform(St_geomfromtext('{{bbox_wkt}}', 4326),3857), the_geom_webmercator)"+
-  "        THEN   St_Transform(St_geomfromtext('{{bbox_wkt}}', 4326),3857)"+
+  "        THEN   ST_Area(St_Transform(St_geomfromtext('{{bbox_wkt}}', 4326),3857))"+
   "      ELSE"+
-  "         ST_Intersection("+
+  "         ST_Area(ST_Intersection("+
   "             St_Transform(St_geomfromtext('{{bbox_wkt}}', 4326),3857),"+
   "         the_geom_webmercator"+
   "      ) "+ //st_intersection
+  "      ) "+ //st_area
       " END "+  //CASE
-  "  )"+  //st_area" 
+  //"  )"+  //st_area" 
   "   / "+
   "   ST_Area("+
   "     St_Transform("+
@@ -255,7 +260,7 @@ okm.iiif = {};
 okm.G.CARTO_USER = "krdyke";
 okm.G.MB_TOKEN = "pk.eyJ1Ijoia3JkeWtlIiwiYSI6Ik15RGcwZGMifQ.IR_NpAqXL1ro8mFeTIdifg";
 okm.G.MAPZEN_KEY = "mapzen-6dXEegt";
-okm.G.TABLE_NAME = "okmaps";
+okm.G.TABLE_NAME = "okmaps2";
 okm.G.PER_PAGE = 10;
 okm.G.PAGE_NUMBER = 1;
 okm.G.DEFAULT_BBOX_STRING = "-103.62304687500001,31.690781806136822,-93.40576171875001,39.57182223734374";
@@ -282,7 +287,7 @@ okm.G.TABLE_FIELDS = [
   "collection",
   //"img_width",
   //"img_height",
-  "size"];
+];
 okm.G.CARTO_URL = okm.G.BASE_URL
     .replace("{{table_name}}", okm.G.TABLE_NAME)
     .replace("{{fields}}", okm.G.TABLE_FIELDS.join(", "));
@@ -873,7 +878,6 @@ function filterRankFeatures(){
 }
 
 
-
 function getBoundsArea(bounds){
   var sw = bounds.getSouthWest();
   var ne = bounds.getNorthEast();
@@ -881,6 +885,7 @@ function getBoundsArea(bounds){
   var nw = L.latLng(ne.lat, sw.lng);
   return ne.distanceTo(nw) * ne.distanceTo(se);
 }
+
 
 function syncUrlHash(){
   var loc = "loc="+ okm.map.map_object.getBounds().toBBoxString();
