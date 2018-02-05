@@ -1,2 +1,5 @@
 node_modules/
 bower_components/
+assets/css/app.scss
+assets/css/app.css.map
+assets/css/.sass-cache/

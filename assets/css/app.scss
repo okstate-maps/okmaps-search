@@ -360,13 +360,17 @@ Geolocation
 Geocoder
 */
 
- .leaflet-pelias-control, .leaflet-touch .leaflet-pelias-control{
-  width: $leaflet-control-touch-width;
-  height: $leaflet-control-touch-height;  
-  line-height: $leaflet-control-touch-height;
- }
 
-.leaflet-pelias-input {
+.leaflet-control-geocoder-icon, .leaflet-touch .leaflet-control-geocoder-icon {  
+  width: 44px;
+  height: 44px;
+}
+
+.leaflet-control-geocoder-icon {
+  background-image: none;
+}
+
+.leaflet-touch .leaflet-pelias-input {
   padding-left: 41px;
 }
 
