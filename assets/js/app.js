@@ -172,7 +172,6 @@ okm.filter.filter_rank_query =
 //from filter button and will eventually include text search
 " {{nonspatial_filters}}" + 
 
-//" ST_GeomFromText('{{bbox_wkt}}', 4326) && the_geom AND"+
 " ST_GeomFromText('{{bbox_wkt}}', 4326) && the_geom"+
 
 " ORDER BY "+
@@ -220,7 +219,7 @@ okm.filter.filter_rank_query =
   "       St_geomfromtext('{{bbox_wkt}}', 4326),"+
   "      3857))"+
 
-  "  ) DESC"+
+  "  ) DESC, original_date ASC"+
 
 // TODO add user sorting
 
@@ -241,6 +240,7 @@ okm.text_search.base_query = "select cartodb_id  from ("+
 
 okm.map = {};
 okm.map.controls = {};
+okm.map.events = {};
 okm.map.layers = {};
 okm.map.styles = {};
 okm.map.styles.highlight = {
@@ -504,6 +504,7 @@ $(window).resize(function() {
 $(document).on("click", ".feature-row", function(e) {
   okm.sidebar.click(parseInt($(this).data("id"), 10));
 });
+
 
 
 // if (!("ontouchstart" in window || 
@@ -1165,9 +1166,23 @@ function updateAttribution(e) {
               fullscreenControl: true
             });
             
+            okm.iiif.map.on("fullscreenchange", function(){
+              if (okm.iiif.map.isFullscreen()){
+                okm.map.map_object.off("moveend", okm.map.events.moveend);
+              }
+              else {
+                //use a timeout before turning moveend back on to avoid 
+                //triggering sync()
+                setTimeout(function(){
+                    okm.map.map_object.on("moveend", okm.map.events.moveend);
+                }, 250);
+              }
+            });
+
             okm.iiif.url = iiif_url;
 
-            $("#featureModal .leaflet-control-fullscreen a").wrapInner("<i class='fas fa-expand fa-2x'></i>");
+            $("#featureModal .leaflet-control-fullscreen a")
+              .wrapInner("<i class='fas fa-expand fa-2x'></i>");
   
             addToHighlight(feature);
             
@@ -1297,65 +1312,64 @@ searchControl.onAdd = function (map) {
     }
 
 searchControl.addTo(okm.map.map_object);
-//debugger;
-
-
-      
-// var searchControl = L.control.geocoder(okm.G.MAPZEN_KEY, {
-//   position: "topright",
-//   fullWidth: 400,
-//   placeholder: null,
-//   autocomplete: false,
-//   title: "Search for a place."
-// });
-
  
-  /* Layer control listeners that allow for a single markerClusters layer */
   okm.map.map_object.on("overlayadd", function(e) {
     if (e.layer === okm.map.layers.okmapsLayer) {
-      //markerClusters.addLayer(okmaps);
       okm.sidebar.sync();
     }
   });
 
   okm.map.map_object.on("overlayremove", function(e) {
     if (e.layer === okm.map.layers.okmapsLayer) {
-      //markerClusters.removeLayer(okmaps);
       okm.sidebar.sync();
     }
   });
 
+
+okm.map.map_object.drag_event= function(e) {
+   var b = okm.util.assymmetric_pad(this.getBounds());
+      okm.map.bounds_rectangle.setBounds(b);
+}
+
   okm.map.map_object.on("dragstart", function (e) {
     var b = okm.util.assymmetric_pad(this.getBounds());
-    okm.map.bounds_rectangle = L.rectangle(b, okm.map.styles.bounds_rectangle);
-    okm.map.bounds_rectangle.addTo(okm.map.map_object);
-
-    okm.map.map_object.on("drag", function (e) {
-      var b = okm.util.assymmetric_pad(this.getBounds());
+    if (!okm.map.bounds_rectangle){
+      okm.map.bounds_rectangle = L.rectangle(b, okm.map.styles.bounds_rectangle);
+    }
+    else {
       okm.map.bounds_rectangle.setBounds(b);
-    });
+    }
+      okm.map.bounds_rectangle.addTo(okm.map.map_object);
+
+    okm.map.map_object.on("drag", okm.map.map_object.drag_event, okm.map.map_object);
 
 });
 
 
+  okm.map.map_object.on("mouseup", function (e) {console.log("mouseup");});
+  okm.map.map_object.on("touchend", function (e) {console.log("touchend");});
+
   okm.map.map_object.on("dragend", function (e) {
     if (okm.map.bounds_rectangle){
-      okm.map.map_object.off("drag", function (e) {
-        var b = okm.util.assymmetric_pad(this.getBounds());
-        okm.map.bounds_rectangle.setBounds(b);
-      }); 
-      okm.map.bounds_rectangle.removeFrom(okm.map.map_object);
+      console.log("dragend");
+      setTimeout(function() {
+        okm.map.bounds_rectangle.removeFrom(okm.map.map_object);
+      }, 1);
+      okm.map.map_object.off("drag", okm.map.map_object.drag_event, okm.map.map_object); 
     }
   });
 
-  /* Filter sidebar feature list to only show features in current map bounds */
-  okm.map.map_object.on("moveend", function (e) {
+  okm.map.events.moveend = function (e) {
+    console.log("moveend");
     okm.G.PAGE_NUMBER = 1;
     if (okm.util.autosearch_status()){
       okm.sidebar.sync();
     }
     syncUrlHash();
-  });
+  }
+
+  /* Filter sidebar feature list to only show features in current map bounds */
+  okm.map.map_object.on("moveend", okm.map.events.moveend);
 
   /* Clear feature highlight when map is clicked */
   okm.map.map_object.on("click", function(e) {
@@ -1379,7 +1393,7 @@ searchControl.addTo(okm.map.map_object);
                    {name:"feature-row", attr:"title"}],
       item: "<tr class='feature-row'><td class='feature-name'>"+
         "</td><td class='feature-sort-name'>" + 
-        "</td><td><div class='thumbnail-background'><i class='thumbnail-loading fa fa-spin fa-circle-o-notch fa-2x'></i><span class='thumbnail-background-helper'></span>" +
+        "</td><td><div class='thumbnail-background'><i class='thumbnail-loading fa fa-spin fa-circle-notch fa-2x'></i><span class='thumbnail-background-helper'></span>" +
         "<img class='feature-thumbnail'/>"+
         "</div></td</tr>"
      });

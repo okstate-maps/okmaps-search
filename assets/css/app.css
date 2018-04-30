@@ -208,6 +208,15 @@ Navbar
   font-size: 25px;
   color: #FF7300; }
 
+.navbar-brand {
+  padding: 0;
+  padding-left: 10px;
+  padding-right: 10px;
+  padding-top: 2.5px; }
+
+.navbar-brand img {
+  height: 45px; }
+
 .navbar-inverse .navbar-nav > li > a,
 .navbar-inverse .navbar-brand:focus, .navbar-inverse .navbar-brand:hover {
   color: #BEBEBE; }
