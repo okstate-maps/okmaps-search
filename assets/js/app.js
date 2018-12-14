@@ -1,3 +1,8 @@
+// deep-diff
+// https://raw.githubusercontent.com/flitbit/diff/master/dist/deep-diff.min.js
+
+
+
 /*
   Copyright (c) 2014, Alexandre Melard
   All rights reserved.   
@@ -240,7 +245,6 @@ okm.text_search.base_query = "select cartodb_id  from ("+
 
 okm.map = {};
 okm.map.controls = {};
-okm.map.events = {};
 okm.map.layers = {};
 okm.map.styles = {};
 okm.map.styles.highlight = {
@@ -291,71 +295,6 @@ okm.G.TABLE_FIELDS = [
 okm.G.CARTO_URL = okm.G.BASE_URL
     .replace("{{table_name}}", okm.G.TABLE_NAME)
     .replace("{{fields}}", okm.G.TABLE_FIELDS.join(", "));
-<<<<<<< HEAD
-
-okm.util.state_hash = {
-    'Alabama': 'AL',
-    'Alaska': 'AK',
-    'American Samoa': 'AS',
-    'Arizona': 'AZ',
-    'Arkansas': 'AR',
-    'California': 'CA',
-    'Colorado': 'CO',
-    'Connecticut': 'CT',
-    'Delaware': 'DE',
-    'District Of Columbia': 'DC',
-    'Federated States Of Micronesia': 'FM',
-    'Florida': 'FL',
-    'Georgia': 'GA',
-    'Guam': 'GU',
-    'Hawaii': 'HI',
-    'Idaho': 'ID',
-    'Illinois': 'IL',
-    'Indiana': 'IN',
-    'Iowa': 'IA',
-    'Kansas': 'KS',
-    'Kentucky': 'KY',
-    'Louisiana': 'LA',
-    'Maine': 'ME',
-    'Marshall Islands': 'MH',
-    'Maryland': 'MD',
-    'Massachusetts': 'MA',
-    'Michigan': 'MI',
-    'Minnesota': 'MN',
-    'Mississippi': 'MS',
-    'Missouri': 'MO',
-    'Montana': 'MT',
-    'Nebraska': 'NE',
-    'Nevada': 'NV',
-    'New Hampshire': 'NH',
-    'New Jersey': 'NJ',
-    'New Mexico': 'NM',
-    'New York': 'NY',
-    'North Carolina': 'NC',
-    'North Dakota': 'ND',
-    'Northern Mariana Islands': 'MP',
-    'Ohio': 'OH',
-    'Oklahoma': 'OK',
-    'Oregon': 'OR',
-    'Palau': 'PW',
-    'Pennsylvania': 'PA',
-    'Puerto Rico': 'PR',
-    'Rhode Island': 'RI',
-    'South Carolina': 'SC',
-    'South Dakota': 'SD',
-    'Tennessee': 'TN',
-    'Texas': 'TX',
-    'Utah': 'UT',
-    'Vermont': 'VT',
-    'Virgin Islands': 'VI',
-    'Virginia': 'VA',
-    'Washington': 'WA',
-    'West Virginia': 'WV',
-    'Wisconsin': 'WI',
-    'Wyoming': 'WY'
-  };
-=======
->>>>>>> gh-pages
 
 okm.util.check_if_need_load = function(elem){
   if (elem.scrollHeight - elem.scrollTop === elem.clientHeight ||
@@ -787,7 +726,7 @@ function animateSidebar() {
   $("#sidebar").animate({
     width: "toggle"
   }, 350, function() {
-   map.invalidateSize({pan:false});
+   okm.map.map_object.invalidateSize({pan:false});
   });
 }
 
@@ -803,7 +742,7 @@ okm.sidebar.click = function(id) {
   /* Hide sidebar and go to the map on small screens */
   if (document.body.clientWidth <= 767) {
     $("#sidebar").hide();
-    map.invalidateSize({pan:false});
+    okm.map.map_object.invalidateSize({pan:false});
   }
 };
 
@@ -814,14 +753,6 @@ function buildFilterRankQuery(input_bounds, offset){
   var url = okm.G.BASE_URL.replace("{{username}}", okm.G.CARTO_USER)
     .replace("{{table_name}}", okm.G.TABLE_NAME)
     .replace("{{fields}}", "cartodb_id");
-<<<<<<< HEAD
-  var q = okm.filter.filter_rank_query
-    .replace(/{{bbox_wkt}}/g, bbox_wkt)
-    .replace(/{{nonspatial_filters}}/g, nonspatial_filters)
-    .replace(/{{table_name}}/g, okm.G.TABLE_NAME)
-    .replace(/{{offset}}/g, offset)
-    .replace(/{{per_page}}/g, okm.G.PER_PAGE);
-=======
   var q = okm.filter.filter_rank_query;
 
   q = q.replace(/{{bbox_wkt}}/g, bbox_wkt)
@@ -831,7 +762,6 @@ function buildFilterRankQuery(input_bounds, offset){
       .replace(/{{table_name}}/g, okm.G.TABLE_NAME)
       .replace(/{{offset}}/g, offset)
       .replace(/{{per_page}}/g, okm.G.PER_PAGE);
->>>>>>> gh-pages
   return q;
 }
 
@@ -963,7 +893,7 @@ function getBoundsArea(bounds){
 
 
 function syncUrlHash(){
-  var loc = "loc="+ okm.map.map_object.getBounds().toBBoxString();
+  var loc = "loc="+ okm.map.map_object.wrapLatLngBounds(okm.map.map_object.getBounds()).toBBoxString();
   location.hash = [loc].join("&");
 }
 
@@ -1035,32 +965,19 @@ okm.map.more_results = function(){
 };
 
 okm.sidebar.sync = function() {
-<<<<<<< HEAD
-  console.log("okm.sidebar.sync");
-=======
   //console.log("okm.sidebar.sync");
->>>>>>> gh-pages
   var start, end;
   start = performance.now();
   $("#loading").show();
 
   filterRankFeatures(okm.map.layers.okmaps).then(function(){
 
-<<<<<<< HEAD
-    featureList.clear();
-    okm.sidebar.add_results();
-    $(".sidebar-table").scrollTop(0);
-
-    end = performance.now();
-    console.log("3:  "+ (end - start) + " milliseconds.");
-=======
     end = performance.now();
     console.log("filterRankFeatures:  "+ (end - start) + " milliseconds.");
 
     featureList.clear();
     okm.sidebar.add_results();
     $(".sidebar-table").scrollTop(0);
->>>>>>> gh-pages
     $("#loading").hide();
     
   }, function(err){
@@ -1166,23 +1083,9 @@ function updateAttribution(e) {
               fullscreenControl: true
             });
             
-            okm.iiif.map.on("fullscreenchange", function(){
-              if (okm.iiif.map.isFullscreen()){
-                okm.map.map_object.off("moveend", okm.map.events.moveend);
-              }
-              else {
-                //use a timeout before turning moveend back on to avoid 
-                //triggering sync()
-                setTimeout(function(){
-                    okm.map.map_object.on("moveend", okm.map.events.moveend);
-                }, 250);
-              }
-            });
-
             okm.iiif.url = iiif_url;
 
-            $("#featureModal .leaflet-control-fullscreen a")
-              .wrapInner("<i class='fas fa-expand fa-2x'></i>");
+            $("#featureModal .leaflet-control-fullscreen a").wrapInner("<i class='fas fa-expand fa-2x'></i>");
   
             addToHighlight(feature);
             
@@ -1198,6 +1101,8 @@ function updateAttribution(e) {
     layers: [okm.map.layers.street, okm.map.layers.okmapsLayer, okm.map.layers.highlight],
     zoomControl: false,
     attributionControl: false,
+    minZoom:4,
+    worldCopyJump: true,
     renderer: L.svg({ padding: 100 }) // so search rectangle doesn't get clipped during dragging
   });
   okm.map.map_object.fitBounds(init_bounds);
@@ -1312,15 +1217,27 @@ searchControl.onAdd = function (map) {
     }
 
 searchControl.addTo(okm.map.map_object);
+      
+// var searchControl = L.control.geocoder(okm.G.MAPZEN_KEY, {
+//   position: "topright",
+//   fullWidth: 400,
+//   placeholder: null,
+//   autocomplete: false,
+//   title: "Search for a place."
+// });
+
  
+  /* Layer control listeners that allow for a single markerClusters layer */
   okm.map.map_object.on("overlayadd", function(e) {
     if (e.layer === okm.map.layers.okmapsLayer) {
+      //markerClusters.addLayer(okmaps);
       okm.sidebar.sync();
     }
   });
 
   okm.map.map_object.on("overlayremove", function(e) {
     if (e.layer === okm.map.layers.okmapsLayer) {
+      //markerClusters.removeLayer(okmaps);
       okm.sidebar.sync();
     }
   });
@@ -1334,9 +1251,11 @@ okm.map.map_object.drag_event= function(e) {
   okm.map.map_object.on("dragstart", function (e) {
     var b = okm.util.assymmetric_pad(this.getBounds());
     if (!okm.map.bounds_rectangle){
+      console.log("create bounds rectangle")
       okm.map.bounds_rectangle = L.rectangle(b, okm.map.styles.bounds_rectangle);
     }
     else {
+      console.log("setBounds");
       okm.map.bounds_rectangle.setBounds(b);
     }
       okm.map.bounds_rectangle.addTo(okm.map.map_object);
@@ -1345,31 +1264,34 @@ okm.map.map_object.drag_event= function(e) {
 
 });
 
-
   okm.map.map_object.on("mouseup", function (e) {console.log("mouseup");});
   okm.map.map_object.on("touchend", function (e) {console.log("touchend");});
 
   okm.map.map_object.on("dragend", function (e) {
     if (okm.map.bounds_rectangle){
       console.log("dragend");
-      setTimeout(function() {
-        okm.map.bounds_rectangle.removeFrom(okm.map.map_object);
-      }, 1);
+      okm.map.bounds_rectangle.removeFrom(okm.map.map_object);
       okm.map.map_object.off("drag", okm.map.map_object.drag_event, okm.map.map_object); 
+      //debugger;
+      // if (L.Browser.gecko){
+      //   okm.map.map_object.fire("dragend");
+      // }
     }
   });
 
-  okm.map.events.moveend = function (e) {
+  /* Filter sidebar feature list to only show features in current map bounds */
+  okm.map.map_object.on("moveend", function (e) {
     console.log("moveend");
+    if (okm.iiif.hasOwnProperty("map") && okm.iiif.map.isFullscreen()){
+      return; // still need to deal with exiting fullscreen causing moveend to fire
+    }
+
     okm.G.PAGE_NUMBER = 1;
     if (okm.util.autosearch_status()){
       okm.sidebar.sync();
     }
     syncUrlHash();
-  }
-
-  /* Filter sidebar feature list to only show features in current map bounds */
-  okm.map.map_object.on("moveend", okm.map.events.moveend);
+  });
 
   /* Clear feature highlight when map is clicked */
   okm.map.map_object.on("click", function(e) {
@@ -1506,8 +1428,8 @@ L.Control.UpdateSearchCheckbox = L.Control.extend({
   onAdd: function(map){
     var div = L.DomUtil.create("div");
     var content = '<div  class="autosearch" data-step="4" data-intro="Uncheck this to prevent results from changing when you move the map.">'+
-                    '<input id="search-on-map-move" checked="" type="checkbox">'+
-                    '<label class="disable-text-selection" for="search-on-map-move"> Redo search when I move the map</label>'+
+                   '<input id="search-on-map-move" checked="" type="checkbox">'+
+                  '<label class="disable-text-selection text" for="search-on-map-move">&nbsp;Redo search when I move the map</label>'+
                   '</div>';
     div.innerHTML = content;
     L.DomEvent.disableClickPropagation(div);

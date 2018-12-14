@@ -12,8 +12,8 @@
     <title>mapsOK</title>
     <link href="https://fonts.googleapis.com/css?family=Open+Sans" rel="stylesheet">
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
+    <link rel="stylesheet" href="assets/leaflet/leaflet.css" />
     <!--<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css">-->
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.0.2/dist/leaflet.css" />
     <link href='https://api.mapbox.com/mapbox.js/plugins/leaflet-fullscreen/v1.0.1/leaflet.fullscreen.css' rel='stylesheet' />
 
     <link rel="stylesheet" href="https://api.tiles.mapbox.com/mapbox.js/plugins/leaflet-locatecontrol/v0.43.0/L.Control.Locate.css">
@@ -82,7 +82,7 @@
         <div class="sidebar-wrapper">
           <div class="panel panel-default" id="features">
             <div class="panel-heading">
-              <h3 class="panel-title">Maps
+              <h3 class="panel-title">&nbsp;
               <button type="button" class="btn btn-xs btn-default pull-right" id="sidebar-hide-btn"><i class="fas fa-chevron-left"></i></button></h3>
             </div>
             <div class="panel-body">
@@ -99,11 +99,15 @@
                 </div>
               </div>
               <div class="row top-buffer">
-                <div class="col-xs-12 col-md-12">
+                <div class="col-xs-6 col-md-6">
 
                     <button data-step="5" data-intro="Click here for filter options." class="btn btn-default" id="filter-options" title="Filter search results">
                       <i class="fas fa-filter"></i><span>&nbsp;Filter options</span>
                     </button>
+                </div>
+                    
+                <div class="col-xs-6 col-md-6">
+
                 </div>
               </div>
 
@@ -262,12 +266,14 @@
 <!--<script src="https://cdnjs.cloudflare.com/ajax/libs/typeahead.js/0.11.1/typeahead.bundle.min.js"></script> -->
 <!--<script src="https://cdnjs.cloudflare.com/ajax/libs/handlebars.js/3.0.3/handlebars.min.js"></script>   -->  
     <script src="https://cdnjs.cloudflare.com/ajax/libs/list.js/1.3.0/list.js"></script> 
-    <script src="https://unpkg.com/leaflet@1.0.2/dist/leaflet.js"></script>
+    <script src="assets/leaflet/leaflet.js"></script>
+    
     <script src="https://api.tiles.mapbox.com/mapbox.js/plugins/leaflet-locatecontrol/v0.43.0/L.Control.Locate.min.js"></script>
     <!-- <script src="assets/js/leaflet-iiif.js"></script>-->
     <script src="assets/js/leaflet-iiif-2.0.js"></script>
     <script src='https://api.mapbox.com/mapbox.js/plugins/leaflet-fullscreen/v1.0.1/Leaflet.fullscreen.min.js'></script>
     <script src="assets/leaflet-groupedlayercontrol/leaflet.groupedlayercontrol.js"></script>
+    
     <!--<script src="assets/Leaflet-MiniMap/dist/Control.MiniMap.min.js"></script>-->
     <script src="assets/intro.js-2.3.0/minified/intro.min.js"></script>
 <!--<script src="assets/js/moment.min.js"></script>

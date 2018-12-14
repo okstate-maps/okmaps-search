@@ -14,7 +14,7 @@ input[type="radio"], input[type="checkbox"] {
   max-height: 70%; }
 
 .top-buffer {
-  margin-top: 5px; }
+  margin-top: 15px; }
 
 .disable-text-selection {
   -webkit-user-select: none;
@@ -33,6 +33,9 @@ input[type="radio"], input[type="checkbox"] {
 
 #sidebar, .panel-heading, .feature-row, .panel-body {
   width: 350px; }
+
+#input_text_search {
+  border-radius: 0 4px 4px 0; }
 
 #map {
   width: auto;
@@ -143,7 +146,7 @@ input[type="radio"], input[type="checkbox"] {
   position: absolute;
   z-index: 1;
   width: 100%;
-  top: 130px;
+  top: 150px;
   bottom: 0;
   overflow-y: scroll;
   overflow-x: hidden; }
@@ -308,7 +311,6 @@ Geolocation
 /*
 Geocoder
 */
-
 .leaflet-control-geocoder-icon, .leaflet-touch .leaflet-control-geocoder-icon {
   width: 44px;
   height: 44px; }
@@ -316,7 +318,7 @@ Geocoder
 .leaflet-control-geocoder-icon {
   background-image: none; }
 
-.leaflet-pelias-input {
+.leaflet-touch .leaflet-pelias-input {
   padding-left: 41px; }
 
 .leaflet-pelias-search-icon {

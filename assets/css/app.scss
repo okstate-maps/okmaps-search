@@ -1,5 +1,5 @@
 $sidebar-width: 350px;
-$sidebar-header-height: 130px;
+$sidebar-header-height: 150px;
 $orange: #FF7300;
 $light-orange: #FF9900;
 $silver: #BEBEBE;
@@ -9,7 +9,7 @@ $sidebar-footer-height: 60px;
 $leaflet-control-touch-height: 44px;
 $leaflet-control-touch-width: 44px;
 $leaflet-control-font-size: 38px;
-$top-buffer: 5px;
+$top-buffer: 15px;
 
 
 html, body, #container {
@@ -49,6 +49,10 @@ input[type="radio"], input[type="checkbox"] {
 
 #sidebar,.panel-heading, .feature-row , .panel-body{
    width: $sidebar-width;
+}
+
+#input_text_search {
+  border-radius: 0 4px 4px 0;
 }
 
 #map {
@@ -486,6 +490,4 @@ Typeahead (not used currently)
   padding: 3px 0;
   border-bottom: 2px solid #333;
 }
-
-
 
