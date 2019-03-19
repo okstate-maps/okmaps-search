@@ -245,6 +245,7 @@ okm.text_search.base_query = "select cartodb_id  from ("+
 
 okm.map = {};
 okm.map.controls = {};
+okm.map.events = {};
 okm.map.layers = {};
 okm.map.styles = {};
 okm.map.styles.highlight = {
@@ -1082,6 +1083,20 @@ function updateAttribution(e) {
               zoom:0,
               fullscreenControl: true
             });
+
+            okm.iiif.map.on("fullscreenchange", function(){
+              if (okm.iiif.map.isFullscreen()){
+                okm.map.map_object.off("moveend", okm.map.events.moveend);
+              }
+              else {
+                //use a timeout before turning moveend back on to avoid 
+                //triggering sync()
+                setTimeout(function(){
+                    okm.map.map_object.on("moveend", okm.map.events.moveend);
+                }, 250);
+              }
+            });
+
             
             okm.iiif.url = iiif_url;
 
@@ -1270,7 +1285,9 @@ okm.map.map_object.drag_event= function(e) {
   okm.map.map_object.on("dragend", function (e) {
     if (okm.map.bounds_rectangle){
       console.log("dragend");
-      okm.map.bounds_rectangle.removeFrom(okm.map.map_object);
+      setTimeout(function() {
+        okm.map.bounds_rectangle.removeFrom(okm.map.map_object);
+      }, 1);
       okm.map.map_object.off("drag", okm.map.map_object.drag_event, okm.map.map_object); 
       //debugger;
       // if (L.Browser.gecko){
@@ -1279,19 +1296,19 @@ okm.map.map_object.drag_event= function(e) {
     }
   });
 
-  /* Filter sidebar feature list to only show features in current map bounds */
-  okm.map.map_object.on("moveend", function (e) {
-    console.log("moveend");
-    if (okm.iiif.hasOwnProperty("map") && okm.iiif.map.isFullscreen()){
-      return; // still need to deal with exiting fullscreen causing moveend to fire
-    }
 
+  okm.map.events.moveend = function (e) {
+    console.log("moveend");
     okm.G.PAGE_NUMBER = 1;
     if (okm.util.autosearch_status()){
       okm.sidebar.sync();
     }
     syncUrlHash();
-  });
+  };
+  
+
+  /* Filter sidebar feature list to only show features in current map bounds */
+  okm.map.map_object.on("moveend", okm.map.events.moveend);
 
   /* Clear feature highlight when map is clicked */
   okm.map.map_object.on("click", function(e) {
