@@ -194,6 +194,22 @@
       </div><!-- /.modal-dialog -->
     </div><!-- /.modal -->
 
+
+    <div class="modal fade" id="announcementModal" tabindex="-1" role="dialog">
+      <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+          <div class="modal-header">
+            <button class="close" type="button" data-dismiss="modal" aria-hidden="true">&times;</button>
+          </div>
+          <div class="modal-body" id="feature-info">MapsOK is currently not functional. We're working hard to correct the situation, so check back soon!</div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+          </div>
+        </div><!-- /.modal-content -->
+      </div><!-- /.modal-dialog -->
+
+    </div><!-- /.modal --> 
+
     <div class="modal fade" id="featureModal" tabindex="-1" role="dialog">
       <div class="modal-dialog modal-lg">
         <div class="modal-content">
@@ -201,7 +217,7 @@
             <button class="close" type="button" data-dismiss="modal" aria-hidden="true">&times;</button>
             <h4 class="modal-title text-primary" id="feature-title"></h4>
           </div>
-          <div class="modal-body" id="feature-info"></div>
+          <div class="modal-body" id="feature-info">MapsOK is currently not functional. We're working hard to correct the situation, so check back soon!</div>
           <div class="modal-footer">
             <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
           </div>
@@ -287,6 +303,10 @@
     <script src="assets/js/lodash.custom.min.js"></script>
     
     <script src="assets/js/app.js"></script>
+    <script>
+      //announcements on if needed.
+      $("#announcementModal").modal("show");
+    </script>
     <script>
       (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
       (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
